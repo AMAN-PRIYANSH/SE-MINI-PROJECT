@@ -1,0 +1,48 @@
+# S1-03: automate pull-request housekeeping.
+#  - label the PR by the folders it changes
+#  - assign the PR to the member who raised it
+#  - fail the PR if it does not link its backlog issue ("Closes #n")
+name: PR automation
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  label:
+    name: Label by changed area
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/labeler@v5
+        with:
+          sync-labels: false
+
+  assign-author:
+    name: Assign the PR to its author
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+    steps:
+      - name: Assign
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr edit ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --add-assignee ${{ github.event.pull_request.user.login }}
+
+  linked-issue:
+    name: PR links a backlog issue
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for "Closes #n"
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if printf '%s' "$PR_BODY" | grep -Eiq '(close[sd]?|fix(e[sd])?|resolve[sd]?) #[0-9]+'; then
+            echo "Linked issue found."
+          else
+            echo "::error::The PR description must link its backlog issue, e.g. 'Closes #12'."
+            exit 1
+          fi
