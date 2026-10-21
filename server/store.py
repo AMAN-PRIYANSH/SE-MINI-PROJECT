@@ -101,10 +101,14 @@ class DatasetStore:
         return p
 
     def discard(self, path):
-        try:
-            Path(path).unlink()
-        except FileNotFoundError:
-            pass
+        for attempt in range(20):
+            try:
+                Path(path).unlink()
+                return
+            except FileNotFoundError:
+                return
+            except PermissionError:  # Windows: a handle is still being closed
+                time.sleep(0.01 * (attempt + 1))
 
     # ---------- datasets ----------
     def register_dataset(self, upload_path, rows, now=None):
