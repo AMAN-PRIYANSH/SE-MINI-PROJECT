@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>User manual - Credit Card Fraud Detection</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">CC</span>
+      <div>
+        <h1>User manual</h1>
+        <p class="subtitle">Credit Card Fraud Detection and Model Performance Evaluation System</p>
+      </div>
+    </div>
+    <nav class="topnav"><a href="/" data-testid="back-link">&larr; Back to the application</a></nav>
+  </header>
+  <main class="manual" data-testid="user-manual">
+<p>Release 1.0 · Team Error 404 · This manual is SRS section 2.6, item 1. You can also open it from
+the <strong>Help &amp; user manual</strong> link at the top of every screen.</p>
+<h2>1. What the system does</h2>
+<p>You give the system a CSV file of credit-card transactions in which every row is already labelled
+as legitimate or fraud. You choose one of three model types. The model predicts, for every row,
+whether it is fraud and how likely that is. The system then compares those predictions with your
+labels and reports how good the model was.</p>
+<table>
+<thead>
+<tr>
+<th>Model type</th>
+<th>Model used</th>
+<th>Kind</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ML</strong></td>
+<td>Random Forest (<code>random_forest</code>)</td>
+<td>classical machine learning</td>
+</tr>
+<tr>
+<td><strong>DL</strong></td>
+<td>Multilayer perceptron (<code>mlp</code>)</td>
+<td>neural network</td>
+</tr>
+<tr>
+<td><strong>QML</strong></td>
+<td>4-qubit variational quantum classifier (<code>vqc_4qubit</code>)</td>
+<td>quantum machine learning on a simulator</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p><strong>Analytical result only. Not a financial authorization decision.</strong> The system never approves,
+blocks or changes a real transaction.</p>
+</blockquote>
+<h2>2. Before you start</h2>
+<ul>
+<li>Ask the person who runs the system for the <strong>API key</strong>. Every action needs it.</li>
+<li>Open the address you were given (by default <a href="http://127.0.0.1:5000/">http://127.0.0.1:5000/</a>) in Chrome, Firefox or Edge.
+  The page works at 1280 × 720 and larger.</li>
+<li>The key is kept only while the page is open. After a reload you must enter it again. This is
+  deliberate, so the key is never stored in your browser.</li>
+</ul>
+<h2>3. Preparing the dataset</h2>
+<p>Your file must follow all of these rules. A file that breaks one is rejected, and the message says
+which rule failed.</p>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Detail</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Format</td>
+<td><code>.csv</code>, UTF-8 text, <strong>comma</strong>-separated, first row is the header</td>
+</tr>
+<tr>
+<td>Size</td>
+<td>at most <strong>500 MB</strong> and <strong>1,000,000</strong> data rows; at least 1 data row</td>
+</tr>
+<tr>
+<td>Label column</td>
+<td><code>Class</code>, with value <code>0</code> (legitimate) or <code>1</code> (fraud) in every row</td>
+</tr>
+<tr>
+<td>Feature columns</td>
+<td><code>V1</code>, <code>V2</code>, … <code>V28</code> and <code>Amount</code>, all numbers (no empty cells, no text)</td>
+</tr>
+<tr>
+<td>Other columns</td>
+<td>allowed and ignored (for example <code>Time</code>, or your own reference column)</td>
+</tr>
+</tbody>
+</table>
+<p>The 30 required columns are the same as in the public Kaggle <em>Credit Card Fraud Detection</em> dataset.
+There, <code>V1</code>–<code>V28</code> are anonymised components of the original transaction fields, so any file in that
+format works as is.</p>
+<p>A ready-made synthetic example ships with the system: <code>data/samples/sample_transactions.csv</code>
+(2,000 rows, about 2 % fraud). Do not upload real cardholder data. Release 1.0 is meant for
+synthetic or anonymised data only.</p>
+<h2>4. Step by step</h2>
+<ol>
+<li><strong>API key.</strong> Paste the key into the <em>API key</em> field.</li>
+<li><strong>Upload.</strong> Under <em>Transaction file</em>, choose one <code>.csv</code> file and press <strong>Upload</strong>. If it is
+   accepted you see <em>Dataset accepted: N rows.</em> If not, the reason appears in red under the button
+   (see section 6).</li>
+<li><strong>Model.</strong> Select exactly one of <strong>ML</strong>, <strong>DL</strong> or <strong>QML</strong>.</li>
+<li><strong>Run.</strong> Press <strong>Run fraud detection</strong>. The badge next to the button changes from
+   <code>queued</code> to <code>running</code> to <code>completed</code>. You do not need to reload the page, because it checks the
+   status every 2 seconds. A run is stopped and marked failed if it takes longer than 10 minutes.</li>
+<li><strong>Results.</strong> When the run completes, the results appear automatically (section 5).</li>
+<li><strong>Compare.</strong> Select another model and press <strong>Run</strong> again on the same dataset. Each result is
+   labelled with the name of the model that produced it.</li>
+<li><strong>Download.</strong> Press <strong>Download predictions (CSV)</strong> to save <code>row_index, predicted_class,
+   fraud_probability</code> for every row.</li>
+</ol>
+<p>Your dataset and its results are deleted automatically <strong>24 hours</strong> after the upload.</p>
+<h2>5. Reading the results</h2>
+<p><strong>Metrics.</strong> These are computed by comparing the predictions with your <code>Class</code> column. Each is shown
+to 4 decimal places.</p>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th>Question it answers</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Accuracy</td>
+<td>What share of all rows was classified correctly?</td>
+</tr>
+<tr>
+<td>Precision</td>
+<td>Of the rows flagged as fraud, what share really were fraud?</td>
+</tr>
+<tr>
+<td>Recall</td>
+<td>Of the real frauds, what share were caught?</td>
+</tr>
+<tr>
+<td>F1-score</td>
+<td>The balance of precision and recall (their harmonic mean)</td>
+</tr>
+<tr>
+<td>ROC-AUC</td>
+<td>How well the fraud probabilities rank frauds above legitimate rows (0.5 = random, 1 = perfect). Shown as <em>n/a</em> if the file contains only one class</td>
+</tr>
+</tbody>
+</table>
+<p>Fraud is rare: about 0.17 % of transactions in the Kaggle data. A model that never flags anything
+would still score about 99.8 % accuracy, so compare models on <strong>precision, recall and F1</strong>.</p>
+<p><strong>Confusion matrix.</strong> This shows four counts:</p>
+<ul>
+<li><strong>true positives</strong>: frauds that were flagged</li>
+<li><strong>false negatives</strong>: frauds that were missed</li>
+<li><strong>false positives</strong>: legitimate rows that were flagged</li>
+<li><strong>true negatives</strong>: legitimate rows that were correctly passed</li>
+</ul>
+<p>The four counts add up to the number of rows.</p>
+<p><strong>Predictions table.</strong> For each row it shows the row index (0 is the first data row), the predicted
+class (<code>1 fraud</code> / <code>0 legit</code>) and the fraud probability. It shows 50 rows per page; use <strong>Previous</strong>
+and <strong>Next</strong> to move between pages. A row is predicted as fraud when its probability is 0.5 or more.</p>
+<h2>6. Messages and what to do</h2>
+<table>
+<thead>
+<tr>
+<th>Message</th>
+<th>Meaning and fix</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Enter the API key first.</td>
+<td>Paste the key before uploading</td>
+</tr>
+<tr>
+<td>The API key was rejected.</td>
+<td>The key is wrong or has spaces; ask for the correct key</td>
+</tr>
+<tr>
+<td>unsupported file type …</td>
+<td>The file is not a text <code>.csv</code> file (for example an Excel file renamed). Export it as CSV, UTF-8</td>
+</tr>
+<tr>
+<td>the file is empty / the file has no data rows</td>
+<td>Add data rows under the header</td>
+</tr>
+<tr>
+<td>file exceeds the 500 MB limit / the 1,000,000 row limit</td>
+<td>Split the file into smaller files</td>
+</tr>
+<tr>
+<td>wrong delimiter: the file must be comma-delimited</td>
+<td>Your file uses <code>;</code> or tabs. Re-export it with commas</td>
+</tr>
+<tr>
+<td>missing required column: X</td>
+<td>Add column X (the names are case-sensitive)</td>
+</tr>
+<tr>
+<td>invalid value in column Class at row N</td>
+<td>Row N has a label that is not 0 or 1 (or is empty)</td>
+</tr>
+<tr>
+<td>non-numeric or missing value in column X at row N</td>
+<td>Row N has text or an empty cell in feature X</td>
+</tr>
+<tr>
+<td>malformed CSV: the rows do not match the header</td>
+<td>Some row has more fields than the header</td>
+</tr>
+<tr>
+<td>Select a model (ML, DL or QML) before running.</td>
+<td>Choose a model type</td>
+</tr>
+<tr>
+<td>Upload a dataset before running.</td>
+<td>Upload an accepted file first</td>
+</tr>
+<tr>
+<td>The requested dataset/job was not found.</td>
+<td>The data is older than 24 hours and was deleted; upload again</td>
+</tr>
+<tr>
+<td>Run failed: The model service is unavailable …</td>
+<td>That model's service is not running. Try another model, or ask the operator to restart it</td>
+</tr>
+<tr>
+<td>Run failed: The analysis timed out …</td>
+<td>The run took more than 10 minutes. Use a smaller file</td>
+</tr>
+</tbody>
+</table>
+<p>Row numbers count data rows from 1, not counting the header. Messages never repeat the values
+in your file.</p>
+<h2>7. For the operator</h2>
+<p>Start everything with <code>python run_all.py</code>. It prints the API key to give to users. Configuration,
+the API and troubleshooting for developers are covered in the project
+<a href="https://github.com/AMAN-PRIYANSH/SE-MINI-PROJECT#readme">README</a>.</p>
+  </main>
+</body>
+</html>

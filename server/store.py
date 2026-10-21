@@ -72,15 +72,26 @@ class DatasetStore:
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(data, f)
         _chmod(tmp, FILE_MODE)
+        # On Windows os.replace fails while another thread has the target open: retry briefly
+        for attempt in range(50):
+            try:
+                os.replace(tmp, path)
+                return
+            except PermissionError:
+                time.sleep(0.01 * (attempt + 1))
         os.replace(tmp, path)
 
     @staticmethod
     def _read_json(path):
-        try:
-            with open(path, encoding="utf-8") as f:
-                return json.load(f)
-        except (FileNotFoundError, json.JSONDecodeError):
-            return None
+        for attempt in range(20):
+            try:
+                with open(path, encoding="utf-8") as f:
+                    return json.load(f)
+            except (FileNotFoundError, json.JSONDecodeError):
+                return None
+            except PermissionError:  # Windows: file being replaced right now
+                time.sleep(0.01 * (attempt + 1))
+        return None
 
     # ---------- uploads ----------
     def new_upload_path(self):
@@ -90,10 +101,14 @@ class DatasetStore:
         return p
 
     def discard(self, path):
-        try:
-            Path(path).unlink()
-        except FileNotFoundError:
-            pass
+        for attempt in range(20):
+            try:
+                Path(path).unlink()
+                return
+            except FileNotFoundError:
+                return
+            except PermissionError:  # Windows: a handle is still being closed
+                time.sleep(0.01 * (attempt + 1))
 
     # ---------- datasets ----------
     def register_dataset(self, upload_path, rows, now=None):
