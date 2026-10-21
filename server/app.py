@@ -11,6 +11,7 @@ from pathlib import Path
 from flask import Flask, g, request, send_from_directory
 
 from server.errors import register_error_handlers
+from server.jobs import JobManager
 from server.store import DatasetStore
 from shared.config import Config
 
@@ -28,6 +29,7 @@ def create_app(config=None, start_background=True):
 
     store = DatasetStore(config.store_dir, retention_s=config.retention_s).init()
     app.extensions["ccfd_store"] = store
+    app.extensions["ccfd_jobs"] = JobManager(store, config)
 
     register_error_handlers(app)
     _register_request_log(app)
