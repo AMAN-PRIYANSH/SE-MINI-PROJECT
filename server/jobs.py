@@ -81,14 +81,81 @@ class JobManager:
         log.info("job failed job_id=%s reason=%s", job_id, code)
 
     def _call_service(self, job):
+        """Call POST /predict with a hard overall deadline of job_timeout_s (REQ-FD-14).
+
+        The HTTP call runs in a helper thread so that a service that never answers, or that
+        trickles bytes slowly, still ends in JOB_TIMEOUT when the deadline passes.
+        """
         url = self.config.service_urls[job["model_type"]].rstrip("/") + "/predict"
-        try:
-            resp = requests.post(url, json={"dataset_id": job["dataset_id"]},
-                                 timeout=(5, self.config.job_timeout_s))
-        except requests.Timeout:
-            raise JobFailure("JOB_TIMEOUT")
-        except requests.RequestException:
+        deadline = self.config.job_timeout_s
+        outcome = {}
+
+        def call():
+            try:
+                outcome["resp"] = requests.post(url, json={"dataset_id": job["dataset_id"]},
+                                                timeout=(5, deadline + 5))
+            except Exception as e:  # recorded and mapped below
+                outcome["error"] = e
+
+        worker = threading.Thread(target=call, daemon=True, name=f"predict-{job['job_id'][:8]}")
+        worker.start()
+        worker.join(deadline)
+        if worker.is_alive():
+            raise JobFailure("JOB_TIMEOUT")  # the late answer, if any, is ignored
+        if "error" in outcome:
+            if isinstance(outcome["error"], requests.Timeout):
+                raise JobFailure("JOB_TIMEOUT")
             raise JobFailure("MODEL_SERVICE_ERROR")
+        resp = outcome["resp"]
         if resp.status_code != 200:
             raise JobFailure("MODEL_SERVICE_ERROR")
-        return resp.json()
+        try:
+            result = resp.json()
+        except ValueError:
+            raise JobFailure("MODEL_SERVICE_ERROR")
+        meta = self.store.dataset_meta(job["dataset_id"])
+        if not valid_result(result, meta["rows"] if meta else None):
+            raise JobFailure("MODEL_SERVICE_ERROR")  # contract violation: never shown as success
+        return result
+
+    def recover(self):
+        """Fail jobs left queued or running by a previous server process (never leave them hanging)."""
+        for job_file in self.store.jobs.glob("*.json"):
+            job = self.store.load_job(job_file.stem)
+            if job and job.get("status") in ("queued", "running"):
+                self._fail(job["job_id"], "MODEL_SERVICE_ERROR")
+
+
+METRIC_KEYS = {"accuracy", "precision", "recall", "f1", "roc_auc", "confusion_matrix"}
+
+
+def _is_number(v):
+    return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def valid_result(result, expected_rows):
+    """Check a POST /predict body against the IPredict contract (SADS 3.2)."""
+    if not isinstance(result, dict) or set(result) != {"model_name", "predictions", "metrics"}:
+        return False
+    if not isinstance(result["model_name"], str) or not result["model_name"]:
+        return False
+    preds, metrics = result["predictions"], result["metrics"]
+    if not isinstance(preds, list) or (expected_rows is not None and len(preds) != expected_rows):
+        return False
+    for i, p in enumerate(preds):
+        if (not isinstance(p, dict) or p.get("row") != i or p.get("class") not in (0, 1)
+                or not _is_number(p.get("probability")) or not 0 <= p["probability"] <= 1):
+            return False
+    if not isinstance(metrics, dict) or set(metrics) != METRIC_KEYS:
+        return False
+    for k in ("accuracy", "precision", "recall", "f1"):
+        if not _is_number(metrics[k]) or not 0 <= metrics[k] <= 1:
+            return False
+    if metrics["roc_auc"] is not None and not (_is_number(metrics["roc_auc"]) and 0 <= metrics["roc_auc"] <= 1):
+        return False
+    cm = metrics["confusion_matrix"]
+    if not isinstance(cm, dict) or set(cm) != {"tp", "tn", "fp", "fn"}:
+        return False
+    if not all(isinstance(v, int) and v >= 0 for v in cm.values()) or sum(cm.values()) != len(preds):
+        return False
+    return True
