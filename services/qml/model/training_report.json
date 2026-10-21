@@ -1,0 +1,23 @@
+{
+  "vqc_4qubit": {
+    "simulator": "pennylane default.qubit 0.45.1",
+    "train_rows": 794,
+    "steps": 600,
+    "train_seconds": 15.7,
+    "test_rows": 56962,
+    "inference_seconds": 0.5,
+    "test_metrics": {
+      "accuracy": 0.9957,
+      "precision": 0.231,
+      "recall": 0.6531,
+      "f1": 0.3413,
+      "roc_auc": 0.8536,
+      "confusion_matrix": {
+        "tp": 64,
+        "tn": 56651,
+        "fp": 213,
+        "fn": 34
+      }
+    }
+  }
+}
