@@ -30,6 +30,7 @@ def create_app(config=None, start_background=True):
     store = DatasetStore(config.store_dir, retention_s=config.retention_s).init()
     app.extensions["ccfd_store"] = store
     app.extensions["ccfd_jobs"] = JobManager(store, config)
+    app.extensions["ccfd_jobs"].recover()
 
     register_error_handlers(app)
     _register_request_log(app)

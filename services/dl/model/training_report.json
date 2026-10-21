@@ -1,0 +1,19 @@
+{
+  "mlp": {
+    "train_seconds": 3.0,
+    "epochs": 8,
+    "test_metrics": {
+      "accuracy": 0.9994,
+      "precision": 0.9125,
+      "recall": 0.7449,
+      "f1": 0.8202,
+      "roc_auc": 0.9625,
+      "confusion_matrix": {
+        "tp": 73,
+        "tn": 56857,
+        "fp": 7,
+        "fn": 25
+      }
+    }
+  }
+}
