@@ -136,3 +136,74 @@ def test_tc_perf_06_large_structurally_invalid_file_rejected_fast(client, auth, 
     body = assert_error_shape(upload(client, "large_noclass.csv", auth, data=payload), 400, "E400_VALIDATION")
     assert body["message"] == "missing required column: Class"
     assert time.perf_counter() - t0 < 5
+
+
+# ---------------- row-level cases (S1-09) ----------------
+def test_tc_upl_03_non_binary_class_values(app, client, auth):
+    body = assert_error_shape(upload(client, "bad_labels.csv", auth), 400, "E400_VALIDATION")
+    assert body["message"] == "invalid value in column Class at row 3: Class must be 0 or 1"
+    assert stored(app) == []
+
+
+def test_tc_upl_04_header_only(app, client, auth):
+    body = assert_error_shape(upload(client, "header_only.csv", auth), 400, "E400_VALIDATION")
+    assert body["message"] == "the file has no data rows"
+    assert stored(app) == []
+
+
+def test_tc_upl_07_non_numeric_feature_names_column_not_value(app, client, auth):
+    body = assert_error_shape(upload(client, "non_numeric.csv", auth), 400, "E400_VALIDATION")
+    assert body["message"] == "non-numeric or missing value in column V5 at row 7"
+    assert "abc" not in body["message"]  # SR-04: never echo cell values
+    assert stored(app) == []
+
+
+def test_tc_upl_08_extra_columns_accepted(client, auth):
+    r = upload(client, "extra_cols.csv", auth)
+    assert r.status_code == 201 and r.get_json()["rows"] == 100
+
+
+def test_row_limit(client, auth, config):
+    config.max_rows = 50
+    body = assert_error_shape(upload(client, "valid_51.csv", auth), 400, "E400_VALIDATION")
+    assert body["message"] == "file exceeds the 50 row limit"
+
+
+def test_ragged_rows_rejected(client, auth):
+    text = (DATA / "valid_51.csv").read_text().splitlines()
+    text[5] = text[5] + ",1,2,3"
+    body = assert_error_shape(upload(client, "r.csv", auth, data="\n".join(text).encode()), 400, "E400_VALIDATION")
+    assert body["message"] == "malformed CSV: the rows do not match the header"
+
+
+def test_empty_feature_value_rejected(client, auth):
+    text = (DATA / "valid_51.csv").read_text().splitlines()
+    cells = text[2].split(",")
+    cells[3] = ""
+    text[2] = ",".join(cells)
+    body = assert_error_shape(upload(client, "e.csv", auth, data="\n".join(text).encode()), 400, "E400_VALIDATION")
+    assert body["message"] == "non-numeric or missing value in column V3 at row 2"
+
+
+def test_infinite_value_rejected(client, auth):
+    text = (DATA / "valid_51.csv").read_text().splitlines()
+    cells = text[4].split(",")
+    cells[29] = "inf"  # Amount
+    text[4] = ",".join(cells)
+    body = assert_error_shape(upload(client, "i.csv", auth, data="\n".join(text).encode()), 400, "E400_VALIDATION")
+    assert body["message"] == "non-numeric or missing value in column Amount at row 4"
+
+
+@pytest.mark.perf
+def test_tc_perf_01_and_03_upload_timing(client, auth):
+    """NFR-01 (10k rows <= 2 s) and NFR-03 (100k rows <= 60 s), measured in-process."""
+    from tests.fixtures.make_datasets import GENERATED, perf
+    if not (GENERATED / "perf_100k.csv").exists():
+        perf()
+    for name, limit, expect in (("perf_10k.csv", 2, 201), ("perf_10k_noclass.csv", 2, 400),
+                                ("perf_100k.csv", 60, 201)):
+        payload = (GENERATED / name).read_bytes()
+        t0 = time.perf_counter()
+        r = upload(client, name, auth, data=payload)
+        assert r.status_code == expect
+        assert time.perf_counter() - t0 <= limit, name
