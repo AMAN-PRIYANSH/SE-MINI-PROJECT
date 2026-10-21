@@ -67,7 +67,48 @@ def check_file_level(stream, filename, size, max_bytes):
 
 
 # ---------------------------------------------------------------- row level (S1-09)
+CHUNK_ROWS = 100_000
+VALID_LABELS = {"0", "1", "0.0", "1.0"}
+
+
 def check_rows(path, max_rows):
-    """Count the data rows (full row-level validation arrives with S1-09)."""
-    with open(path, "rb") as f:
-        return max(sum(1 for line in f if line.strip()) - 1, 0)
+    """Validate every data row and return the number of data rows.
+
+    - at least one data row; at most max_rows (REQ-FD-02, REQ-FD-03)
+    - Class is 0 or 1 in every row
+    - every required feature value is a finite number
+    Row numbers in messages count data rows from 1 (the header is not counted).
+    """
+    import numpy as np
+    import pandas as pd
+
+    rows = 0
+    try:
+        # All columns are read (not usecols) so that a row with extra fields is detected.
+        reader = pd.read_csv(path, dtype=str, keep_default_na=False, index_col=False,
+                             chunksize=CHUNK_ROWS, encoding="utf-8-sig", skip_blank_lines=True)
+        for chunk in reader:
+            first_row = rows + 1
+            rows += len(chunk)
+            if rows > max_rows:
+                raise validation_error(f"file exceeds the {max_rows:,} row limit")
+
+            labels = chunk[LABEL_COLUMN].str.strip()
+            bad = ~labels.isin(VALID_LABELS)
+            if bad.any():
+                n = first_row + int(np.argmax(bad.to_numpy()))
+                raise validation_error(
+                    f"invalid value in column {LABEL_COLUMN} at row {n}: {LABEL_COLUMN} must be 0 or 1")
+
+            for col in FEATURE_COLUMNS:
+                values = pd.to_numeric(chunk[col].str.strip(), errors="coerce").to_numpy(dtype=float)
+                bad = ~np.isfinite(values)
+                if bad.any():
+                    n = first_row + int(np.argmax(bad))
+                    raise validation_error(f"non-numeric or missing value in column {col} at row {n}")
+    except (pd.errors.ParserError, ValueError, UnicodeDecodeError):
+        raise validation_error("malformed CSV: the rows do not match the header")
+
+    if rows == 0:
+        raise validation_error("the file has no data rows")
+    return rows
