@@ -44,8 +44,9 @@ def register_error_handlers(app):
 
     @app.errorhandler(RequestEntityTooLarge)
     def _too_large(e):
-        limit = app.config["CCFD"].max_upload_mb
-        return error_response(400, "E400_VALIDATION", f"file exceeds the {limit:g} MB limit")
+        from server.validator import size_limit_text
+        limit = size_limit_text(app.config["CCFD"].max_upload_bytes)
+        return error_response(400, "E400_VALIDATION", f"file exceeds the {limit} limit")
 
     @app.errorhandler(HTTPException)
     def _http_error(e):
