@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fraud Detection Workbench</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">CC</span>
+      <div>
+        <h1>Credit Card Fraud Detection</h1>
+        <p class="subtitle">Upload a labelled dataset, run an ML, DL or QML model, compare the results.</p>
+      </div>
+    </div>
+    <nav class="topnav" id="help-slot"></nav>
+  </header>
+
+  <main class="layout">
+    <!-- Region 1: dataset upload with the API-key field (REQ-UI-01) -->
+    <section class="card" id="upload-region" aria-labelledby="upload-title">
+      <h2 id="upload-title"><span class="step">1</span> Dataset</h2>
+
+      <label class="field-label" for="api-key">API key</label>
+      <div class="field-row">
+        <input id="api-key" type="password" autocomplete="off" spellcheck="false"
+               placeholder="Paste the API key" data-testid="api-key">
+      </div>
+      <p class="field-msg" id="api-key-msg" role="alert" data-testid="api-key-msg"></p>
+
+      <label class="field-label" for="file-input">Transaction file (.csv, up to 500 MB)</label>
+      <div class="field-row">
+        <input id="file-input" type="file" accept=".csv,text/csv" data-testid="file-input">
+        <button id="upload-btn" class="btn" type="button" data-testid="upload-btn">Upload</button>
+      </div>
+      <p class="hint">Needs a <code>Class</code> column (0 = legitimate, 1 = fraud) and the feature columns
+        <code>V1</code>&ndash;<code>V28</code> and <code>Amount</code>. Other columns are ignored.</p>
+      <p class="field-msg" id="upload-msg" role="alert" data-testid="upload-msg"></p>
+    </section>
+
+    <!-- Region 2: model selection (REQ-FD-06) -->
+    <section class="card" id="model-region" aria-labelledby="model-title">
+      <h2 id="model-title"><span class="step">2</span> Model</h2>
+      <fieldset class="models" data-testid="model-options">
+        <legend class="sr-only">Choose exactly one model type</legend>
+        <label class="model-option">
+          <input type="radio" name="model" value="ml" data-testid="model-ml">
+          <span><strong>ML</strong><small>Random Forest (classical machine learning)</small></span>
+        </label>
+        <label class="model-option">
+          <input type="radio" name="model" value="dl" data-testid="model-dl">
+          <span><strong>DL</strong><small>Multilayer perceptron (neural network)</small></span>
+        </label>
+        <label class="model-option">
+          <input type="radio" name="model" value="qml" data-testid="model-qml">
+          <span><strong>QML</strong><small>Variational quantum classifier (simulator)</small></span>
+        </label>
+      </fieldset>
+      <p class="field-msg" id="model-msg" role="alert" data-testid="model-msg"></p>
+    </section>
+
+    <!-- Region 3: run control with live status (REQ-UI-03) -->
+    <section class="card" id="run-region" aria-labelledby="run-title">
+      <h2 id="run-title"><span class="step">3</span> Run</h2>
+      <div class="field-row">
+        <button id="run-btn" class="btn btn-primary" type="button" data-testid="run-btn">Run fraud detection</button>
+        <span class="badge badge-idle" id="status-badge" data-testid="status-badge">idle</span>
+      </div>
+      <p class="field-msg" id="run-msg" role="alert" data-testid="run-msg"></p>
+      <dl class="facts" id="run-facts"></dl>
+    </section>
+
+    <!-- Region 4: results -->
+    <section class="card results" id="results-region" aria-labelledby="results-title" data-testid="results-region">
+      <h2 id="results-title"><span class="step">4</span> Results</h2>
+      <div id="results-body">
+        <p class="empty">Results appear here automatically when a run finishes.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
