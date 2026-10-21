@@ -143,3 +143,11 @@ table.preds tr.fraud td { background: #fff6f5; }
   .metric-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .result-cols { grid-template-columns: 1fr; }
 }
+
+/* ---------- user manual page ---------- */
+.manual { max-width: 860px; margin: 0 auto; padding: 24px 28px 60px; background: var(--surface); }
+.manual h2 { margin-top: 28px; }
+.manual table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 8px 0 16px; }
+.manual th, .manual td { border: 1px solid var(--border); padding: 6px 10px; text-align: left; vertical-align: top; }
+.manual th { background: #f6f8fb; }
+.manual li { margin: 4px 0; }
