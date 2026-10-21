@@ -1,0 +1,18 @@
+area:server:
+  - changed-files:
+      - any-glob-to-any-file: ["server/**", "shared/**"]
+area:services:
+  - changed-files:
+      - any-glob-to-any-file: ["services/**", "training/**"]
+area:client:
+  - changed-files:
+      - any-glob-to-any-file: ["client/**"]
+area:tests:
+  - changed-files:
+      - any-glob-to-any-file: ["tests/**"]
+area:docs:
+  - changed-files:
+      - any-glob-to-any-file: ["docs/**", "README.md"]
+area:ci:
+  - changed-files:
+      - any-glob-to-any-file: [".github/**"]
