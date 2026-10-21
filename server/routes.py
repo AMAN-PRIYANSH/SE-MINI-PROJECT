@@ -89,5 +89,24 @@ def start_analysis():
     return jsonify({"job_id": job["job_id"], "status": "queued"}), 202
 
 
+@api.get("/analyses/<job_id>")
+def job_status(job_id):
+    """GET /api/analyses/{job_id} - job status, plus results or the failure reason (REQ-API-03)."""
+    store = _store()
+    job = store.load_job(job_id)
+    if job is None:
+        raise ApiError(404, "E404_NOT_FOUND")
+    body = {k: job[k] for k in ("job_id", "dataset_id", "model_type", "status")}
+    if job["status"] == "completed":
+        result = store.load_result(job_id)
+        if result is None:  # result file missing: never present the job as successful (BR-04)
+            raise ApiError(500, "E500_INTERNAL")
+        body.update(model_name=result["model_name"], predictions=result["predictions"],
+                    metrics=result["metrics"])
+    elif job["status"] == "failed":
+        body["reason"] = job["reason"]
+    return jsonify(body)
+
+
 def register(app):
     app.register_blueprint(api)
