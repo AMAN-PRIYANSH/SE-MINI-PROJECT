@@ -12,6 +12,7 @@ from flask import Flask, g, request, send_from_directory
 
 from server.errors import register_error_handlers
 from server.jobs import JobManager
+from server.retention import PurgeTask
 from server.store import DatasetStore
 from shared.config import Config
 
@@ -31,6 +32,8 @@ def create_app(config=None, start_background=True):
     app.extensions["ccfd_store"] = store
     app.extensions["ccfd_jobs"] = JobManager(store, config)
     app.extensions["ccfd_jobs"].recover()
+    purge = PurgeTask(store, config.purge_interval_s)
+    app.extensions["ccfd_purge"] = purge.start() if start_background else purge
 
     register_error_handlers(app)
     _register_request_log(app)
