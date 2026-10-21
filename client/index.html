@@ -15,7 +15,11 @@
         <p class="subtitle">Upload a labelled dataset, run an ML, DL or QML model, compare the results.</p>
       </div>
     </div>
-    <nav class="topnav" id="help-slot"></nav>
+    <!-- REQ-UI-04: help link visible in every page state; opens the user manual in a new tab
+         so the page (and the API key held in memory) is not lost -->
+    <nav class="topnav" id="help-slot">
+      <a href="/static/help.html" target="_blank" rel="noopener" data-testid="help-link">Help &amp; user manual</a>
+    </nav>
   </header>
 
   <main class="layout">
@@ -84,6 +88,7 @@
   </main>
 
   <script src="/static/results.js"></script>
+  <script src="/static/download.js"></script>
   <script src="/static/app.js"></script>
 </body>
 </html>
