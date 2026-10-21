@@ -1,0 +1,6 @@
+# Keep test fixtures byte-exact on every OS (no CRLF conversion)
+*.csv -text
+tests/data/evil.csv binary
+*.joblib binary
+*.npz binary
+*.mp4 binary
