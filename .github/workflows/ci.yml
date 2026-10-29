@@ -31,6 +31,21 @@ jobs:
       - name: Unit, integration and API tests (pytest)
         run: python -m pytest -m "not perf and not ui" -q
 
+  windows:
+    name: Portability - tests on Windows (Python 3.12)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - name: Install dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Smoke test and full API suite (NFR-Q04)
+        run: python -m pytest -m "not perf and not ui" -q
+
   browser:
     name: Browser tests (Playwright, Chromium)
     runs-on: ubuntu-latest
