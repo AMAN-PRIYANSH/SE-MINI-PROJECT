@@ -23,3 +23,11 @@ def test_single_file_upload_control(client):
 
 def test_static_path_traversal_blocked(client):
     assert client.get("/static/../server/app.py").status_code == 404
+
+
+def test_user_manual_documents_schema_and_messages(client):
+    html = client.get("/static/help.html").get_data(as_text=True)
+    for text in ("V1", "V28", "Amount", "Class", "500 MB", "1,000,000", "24 hours",
+                 "missing required column", "wrong delimiter", "non-numeric or missing value",
+                 "The analysis timed out", "The model service is unavailable"):
+        assert text in html, text
