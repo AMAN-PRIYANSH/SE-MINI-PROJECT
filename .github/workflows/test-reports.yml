@@ -1,0 +1,32 @@
+# Phase 3: generate every test report on a clean GitHub runner, on demand.
+# Actions tab > "Test reports" > Run workflow. The reports are kept as the "phase3-reports" artifact.
+name: Test reports
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reports:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m playwright install --with-deps chromium
+      - run: python tests/report/phase3.py unit
+      - run: python tests/report/phase3.py coverage
+      - run: python tests/report/phase3.py branch
+      - run: python tests/report/phase3.py system
+      - run: |
+          if [ -f tests/report/test_cases.json ]; then python tests/report/phase3.py cases; fi
+          python tests/report/phase3.py summary
+      - uses: actions/upload-artifact@v4
+        with:
+          name: phase3-reports
+          path: docs/phase3/

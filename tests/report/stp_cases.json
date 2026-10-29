@@ -3,342 +3,399 @@
   "title": "Dataset upload without API key → 401, nothing stored",
   "priority": "High",
   "type": "Security",
-  "est_min": 20
+  "est_min": 20,
+  "traceability": "SR-03, REQ-API-04 (objective SO-02)"
  },
  "TC-SEC-02": {
   "title": "Invalid API key → 401",
   "priority": "High",
   "type": "Security",
-  "est_min": 15
+  "est_min": 15,
+  "traceability": "SR-03"
  },
  "TC-SEC-03": {
   "title": "Analysis start without API key → 401, no job created",
   "priority": "High",
   "type": "Security",
-  "est_min": 20
+  "est_min": 20,
+  "traceability": "SR-03, REQ-API-02 (objective SO-02)"
  },
  "TC-SEC-04": {
   "title": "Malformed JSON rejected before model processing, never logged",
   "priority": "High",
   "type": "Security",
-  "est_min": 25
+  "est_min": 25,
+  "traceability": "SR-02, REQ-API-04 (objective SO-03)"
  },
  "TC-SEC-05": {
   "title": "Executable disguised as CSV rejected",
   "priority": "High",
   "type": "Security",
-  "est_min": 20
+  "est_min": 20,
+  "traceability": "SR-01, REQ-FD-04"
  },
  "TC-SEC-06": {
   "title": "Oversize upload rejected with specific reason",
   "priority": "Medium",
   "type": "Security",
-  "est_min": 25
+  "est_min": 25,
+  "traceability": "SR-01, REQ-FD-02, REQ-FD-04"
  },
  "TC-SEC-07": {
   "title": "Error responses disclose no internals",
   "priority": "High",
   "type": "Security",
-  "est_min": 25
+  "est_min": 25,
+  "traceability": "SR-06 (objectives SO-01, SO-02)"
  },
  "TC-SEC-08": {
   "title": "No transaction data in logs, UI or export",
   "priority": "High",
   "type": "Security",
-  "est_min": 30
+  "est_min": 30,
+  "traceability": "SR-04 (objective SO-01)"
  },
  "TC-SEC-09": {
   "title": "Dataset store permissions and 24-hour retention",
   "priority": "Medium",
   "type": "Security",
-  "est_min": 30
+  "est_min": 30,
+  "traceability": "SR-05 (objective SO-01)"
  },
  "TC-SEC-10": {
   "title": "Results retrieval without API key → 401",
   "priority": "High",
   "type": "Security",
-  "est_min": 15
+  "est_min": 15,
+  "traceability": "SR-03, REQ-API-03 (objectives SO-01, SO-02)"
  },
  "TC-UPL-01": {
   "title": "Valid dataset accepted and registered",
   "priority": "High",
   "type": "Functional",
-  "est_min": 15
+  "est_min": 15,
+  "traceability": "REQ-FD-02, REQ-FD-03, REQ-FD-05, REQ-API-01, NFR-01"
  },
  "TC-UPL-02": {
   "title": "Missing Class column → 400 naming the reason",
   "priority": "High",
   "type": "Functional",
-  "est_min": 15
+  "est_min": 15,
+  "traceability": "REQ-FD-03, REQ-FD-04, BR-01"
  },
  "TC-UPL-03": {
   "title": "Non-binary Class values → 400",
   "priority": "Medium",
   "type": "Functional",
-  "est_min": 15
+  "est_min": 15,
+  "traceability": "REQ-FD-03, REQ-FD-04"
  },
  "TC-UPL-04": {
   "title": "Header-only file → 400",
   "priority": "Medium",
   "type": "Functional",
-  "est_min": 15
+  "est_min": 15,
+  "traceability": "REQ-FD-03, REQ-FD-04"
  },
  "TC-UPL-05": {
   "title": "Empty file → 400",
   "priority": "Low",
   "type": "Functional",
-  "est_min": 10
+  "est_min": 10,
+  "traceability": "REQ-FD-04"
  },
  "TC-UPL-06": {
   "title": "Wrong delimiter → 400",
   "priority": "Medium",
   "type": "Functional",
-  "est_min": 15
+  "est_min": 15,
+  "traceability": "REQ-FD-02, REQ-FD-04"
  },
  "TC-UPL-07": {
   "title": "Non-numeric feature value → 400",
   "priority": "Medium",
   "type": "Functional",
-  "est_min": 15
+  "est_min": 15,
+  "traceability": "REQ-FD-03, REQ-FD-04"
  },
  "TC-UPL-08": {
   "title": "Extra columns tolerated and ignored",
   "priority": "Low",
   "type": "Functional",
-  "est_min": 15
+  "est_min": 15,
+  "traceability": "REQ-FD-03"
  },
  "TC-MOD-01": {
   "title": "Run blocked with no model selected",
   "priority": "High",
   "type": "Functional",
-  "est_min": 15
+  "est_min": 15,
+  "traceability": "REQ-FD-06, BR-02"
  },
  "TC-MOD-02": {
   "title": "ML selection routes to the ML microservice",
   "priority": "High",
   "type": "Functional",
-  "est_min": 20
+  "est_min": 20,
+  "traceability": "REQ-FD-06, REQ-FD-07, REQ-FD-10, REQ-FD-11, REQ-FD-17, BR-03"
  },
  "TC-MOD-03": {
   "title": "DL selection routes to the DL microservice",
   "priority": "High",
   "type": "Functional",
-  "est_min": 20
+  "est_min": 20,
+  "traceability": "REQ-FD-06, REQ-FD-08, REQ-FD-10, REQ-FD-11, REQ-FD-17, BR-03"
  },
  "TC-MOD-04": {
   "title": "QML selection routes to the QML microservice",
   "priority": "High",
   "type": "Functional",
-  "est_min": 25
+  "est_min": 25,
+  "traceability": "REQ-FD-06, REQ-FD-09, REQ-FD-10, REQ-FD-11, REQ-FD-17, BR-03"
  },
  "TC-MOD-05": {
   "title": "Unknown model_type → 400",
   "priority": "Medium",
   "type": "Functional",
-  "est_min": 15
+  "est_min": 15,
+  "traceability": "REQ-FD-06, REQ-API-02, REQ-API-04, SR-02"
  },
  "TC-MOD-06": {
   "title": "Microservice contract tested in isolation",
   "priority": "Medium",
   "type": "Functional",
-  "est_min": 20
+  "est_min": 20,
+  "traceability": "REQ-FD-10, NFR-Q05"
  },
  "TC-JOB-01": {
   "title": "Valid run accepted within 2 s with job_id",
   "priority": "High",
   "type": "Functional",
-  "est_min": 15
+  "est_min": 15,
+  "traceability": "REQ-FD-12, REQ-API-02"
  },
  "TC-JOB-02": {
   "title": "Poll observes queued → running → completed in order",
   "priority": "High",
   "type": "Functional",
-  "est_min": 30
+  "est_min": 30,
+  "traceability": "REQ-FD-12, REQ-UI-03"
  },
  "TC-JOB-03": {
   "title": "Unknown job_id → 404",
   "priority": "Medium",
   "type": "Functional",
-  "est_min": 10
+  "est_min": 10,
+  "traceability": "REQ-API-03, REQ-API-04"
  },
  "TC-JOB-04": {
   "title": "Two concurrent jobs stay independent",
   "priority": "Medium",
   "type": "Functional",
-  "est_min": 30
+  "est_min": 30,
+  "traceability": "REQ-FD-11, REQ-FD-12, REQ-FD-22"
  },
  "TC-JOB-05": {
   "title": "Microservice down → job failed; other services unaffected",
   "priority": "High",
   "type": "Functional (negative)",
-  "est_min": 35
+  "est_min": 35,
+  "traceability": "REQ-FD-14, REQ-FD-20, BR-04, NFR-06"
  },
  "TC-JOB-06": {
   "title": "Job timeout → failed with reason",
   "priority": "Medium",
   "type": "Functional (negative)",
-  "est_min": 40
+  "est_min": 40,
+  "traceability": "REQ-FD-14"
  },
  "TC-MET-01": {
   "title": "Metrics correct to four decimals against an independent reference",
   "priority": "High",
   "type": "Functional",
-  "est_min": 30
+  "est_min": 30,
+  "traceability": "REQ-FD-15"
  },
  "TC-MET-02": {
   "title": "Confusion-matrix counts are consistent",
   "priority": "High",
   "type": "Functional",
-  "est_min": 15
+  "est_min": 15,
+  "traceability": "REQ-FD-16"
  },
  "TC-MET-03": {
   "title": "Metrics and confusion matrix displayed and labeled with the executed model",
   "priority": "High",
   "type": "Functional/UI",
-  "est_min": 20
+  "est_min": 20,
+  "traceability": "REQ-FD-17, REQ-FD-19, BR-03"
  },
  "TC-MET-04": {
   "title": "Same dataset across ML, DL and QML yields comparable metric sets",
   "priority": "Medium",
   "type": "Functional",
-  "est_min": 30
+  "est_min": 30,
+  "traceability": "REQ-FD-15, REQ-FD-16"
  },
  "TC-MET-05": {
   "title": "Hand-computed tiny dataset matches exactly",
   "priority": "Medium",
   "type": "Functional",
-  "est_min": 25
+  "est_min": 25,
+  "traceability": "REQ-FD-15, REQ-FD-16"
  },
  "TC-RES-01": {
   "title": "Predictions table: columns and 50-row pagination",
   "priority": "High",
   "type": "Functional/UI",
-  "est_min": 20
+  "est_min": 20,
+  "traceability": "REQ-FD-18, REQ-UI-05"
  },
  "TC-RES-02": {
   "title": "Pagination boundary: 51 rows → 2 pages",
   "priority": "Medium",
   "type": "Functional/UI",
-  "est_min": 20
+  "est_min": 20,
+  "traceability": "REQ-FD-18, REQ-UI-05"
  },
  "TC-RES-03": {
   "title": "Prediction value domains",
   "priority": "High",
   "type": "Functional",
-  "est_min": 15
+  "est_min": 15,
+  "traceability": "REQ-FD-13"
  },
  "TC-RES-04": {
   "title": "Results appear automatically when the job completes",
   "priority": "High",
   "type": "UI",
-  "est_min": 20
+  "est_min": 20,
+  "traceability": "REQ-UI-03, REQ-FD-20"
  },
  "TC-RES-05": {
   "title": "Error message adjacent to control within 1 s",
   "priority": "High",
   "type": "UI",
-  "est_min": 20
+  "est_min": 20,
+  "traceability": "REQ-UI-02"
  },
  "TC-RES-06": {
   "title": "CSV download: columns and row count",
   "priority": "Medium",
   "type": "Functional",
-  "est_min": 20
+  "est_min": 20,
+  "traceability": "REQ-FD-21"
  },
  "TC-RES-07": {
   "title": "Single-page layout, upload control, help link and 1280×720 viewport",
   "priority": "High",
   "type": "UI",
-  "est_min": 25
+  "est_min": 25,
+  "traceability": "REQ-UI-01, REQ-UI-04, REQ-UI-06, REQ-FD-01"
  },
  "TC-API-01": {
   "title": "POST /api/datasets contract",
   "priority": "High",
   "type": "Functional",
-  "est_min": 10
+  "est_min": 10,
+  "traceability": "REQ-API-01, REQ-API-05"
  },
  "TC-API-02": {
   "title": "POST /api/analyses contract",
   "priority": "High",
   "type": "Functional",
-  "est_min": 10
+  "est_min": 10,
+  "traceability": "REQ-API-02, REQ-API-05"
  },
  "TC-API-03": {
   "title": "GET /api/analyses/{job_id} contract",
   "priority": "High",
   "type": "Functional",
-  "est_min": 15
+  "est_min": 15,
+  "traceability": "REQ-API-03, REQ-API-05"
  },
  "TC-API-04": {
   "title": "Uniform error body",
   "priority": "Medium",
   "type": "Functional",
-  "est_min": 20
+  "est_min": 20,
+  "traceability": "REQ-API-04"
  },
  "TC-API-05": {
   "title": "Wrong HTTP method → 405",
   "priority": "Low",
   "type": "Functional",
-  "est_min": 10
+  "est_min": 10,
+  "traceability": "REQ-API-04, REQ-API-05"
  },
  "TC-PERF-01": {
   "title": "Upload result within 2 s for up to 10,000 rows",
   "priority": "High",
   "type": "Performance",
-  "est_min": 30
+  "est_min": 30,
+  "traceability": "NFR-01"
  },
  "TC-PERF-02": {
   "title": "Status polling p95 ≤ 500 ms under 10 concurrent pollers",
   "priority": "High",
   "type": "Performance",
-  "est_min": 45
+  "est_min": 45,
+  "traceability": "NFR-02"
  },
  "TC-PERF-03": {
   "title": "100,000-row validation and storage within 60 s",
   "priority": "Medium",
   "type": "Performance",
-  "est_min": 45
+  "est_min": 45,
+  "traceability": "NFR-03"
  },
  "TC-PERF-04": {
   "title": "Results page renders within 3 s",
   "priority": "Medium",
   "type": "Performance",
-  "est_min": 20
+  "est_min": 20,
+  "traceability": "NFR-04"
  },
  "TC-PERF-05": {
   "title": "10 concurrent analysis sessions",
   "priority": "Medium",
   "type": "Performance",
-  "est_min": 45
+  "est_min": 45,
+  "traceability": "NFR-05, NFR-Q03"
  },
  "TC-PERF-06": {
   "title": "Fast rejection of a large structurally invalid file",
   "priority": "Medium",
   "type": "Performance",
-  "est_min": 25
+  "est_min": 25,
+  "traceability": "NFR-07"
  },
  "TC-SAFE-01": {
   "title": "Analytical-only notice on every results screen",
   "priority": "High",
   "type": "Safety",
-  "est_min": 15
+  "est_min": 15,
+  "traceability": "NFR-S02, BR-05"
  },
  "TC-SAFE-02": {
   "title": "No transaction-initiating controls exist",
   "priority": "High",
   "type": "Safety",
-  "est_min": 15
+  "est_min": 15,
+  "traceability": "NFR-S01, BR-05"
  },
  "TC-SAFE-03": {
   "title": "Sample datasets contain no real cardholder data",
   "priority": "Medium",
   "type": "Safety",
-  "est_min": 20
+  "est_min": 20,
+  "traceability": "NFR-S03"
  },
  "TC-SAFE-04": {
   "title": "First-time user completes the workflow within 5 minutes unaided",
   "priority": "Medium",
   "type": "Usability",
-  "est_min": 30
+  "est_min": 30,
+  "traceability": "NFR-Q01"
  }
 }
