@@ -1,0 +1,32 @@
+# Sprint burndown: redrawn whenever a backlog issue is closed or reopened, and on demand.
+# The charts are shown on the run's summary page and kept as the "burndown" artifact.
+name: Burndown
+
+on:
+  issues:
+    types: [closed, reopened, milestoned, labeled]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: read
+
+jobs:
+  burndown:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install matplotlib==3.10.7
+      - name: Draw the charts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python .github/scripts/burndown.py burndown
+      - name: Show the tables on the summary page
+        run: cat burndown/burndown.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: burndown
+          path: burndown/
