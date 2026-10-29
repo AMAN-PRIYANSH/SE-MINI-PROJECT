@@ -65,3 +65,24 @@ See [DEVIATIONS.md](DEVIATIONS.md) P-01 and P-02 for how the plan was actually e
 | #32 | S2-14 | Test execution report against the STP (57 cases) | 3 | Akshat Agarwal | STP Section 10 (deliverables 2, 5) |
 | #33 | S2-15 | Usability walkthrough with a first-time user (manual) | 1 | Aman Priyansh | NFR-Q01 |
 | #34 | S2-16 | Sprint 2 demo video (2 minutes), final docs and development freeze | 2 | Aman Priyansh | Part-2 brief 3b-3d |
+
+## Tracking: board, timeline and burndown
+
+GitHub Projects is used the way Jira would be. The project *Error 404 - Credit Card Fraud Detection
+(SE Mini-Project)* has these views:
+
+| View | Layout | What it shows |
+|---|---|---|
+| Sprint board | Board | Todo / In progress / Done columns, one card per issue, with its story points and sprint |
+| Backlog | Table | All 34 items with key, owner, sprint, story points, status and linked PR |
+| Who does what | Table, grouped by assignee | Each member's items and the sum of their story points |
+| Timeline | Roadmap | Each item as a bar over its sprint's dates, grouped by member |
+
+**Burndown.** The workflow `.github/workflows/burndown.yml` redraws one burndown chart per sprint every time a
+backlog issue is closed (an issue closes when its PR is merged), and can also be run by hand from the Actions tab
+(*Burndown* > *Run workflow*). The charts and a day-by-day table appear on the run's summary page and in the
+`burndown` artifact. The script is `.github/scripts/burndown.py`: story points come from the `SP: n` label of each
+issue and the sprint from its milestone. The project's *Insights* tab also has a burn-up chart.
+
+Both sprints burn down late: Sprint 1's items were all merged on 21-22 Oct, and Sprint 2's on 29-30 Oct, after the
+team change (see DEVIATIONS.md P-02 and P-05). The charts show this as it happened.

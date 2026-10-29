@@ -19,7 +19,9 @@ This README is the **developer README** promised in SRS section 2.6, item 3. End
 | Part-1 errata (problems found and fixed) | [docs/PART1_ERRATA.md](docs/PART1_ERRATA.md) |
 | Test execution report (STP section 10) | [docs/TEST_REPORT.md](docs/TEST_REPORT.md) |
 | Sprint plan and backlog | [docs/SPRINT_PLAN.md](docs/SPRINT_PLAN.md) |
-| Demo videos | [docs/videos/](docs/videos/) |
+| Release notes and freeze | [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md) |
+| Usability walkthrough protocol (TC-SAFE-04) | [docs/USABILITY_WALKTHROUGH.md](docs/USABILITY_WALKTHROUGH.md) |
+| Demo videos (Sprint 1: 1 min, Sprint 2: 2 min) | [docs/videos/](docs/videos/) |
 
 ---
 
