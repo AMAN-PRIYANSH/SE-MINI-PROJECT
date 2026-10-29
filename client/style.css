@@ -145,6 +145,7 @@ table.preds tr.fraud td { background: #fff6f5; }
 }
 
 /* ---------- user manual page ---------- */
+.manual blockquote { margin: 12px 0; padding: 10px 14px; background: var(--warn-bg); color: var(--warn); border-radius: 8px; }
 .manual { max-width: 860px; margin: 0 auto; padding: 24px 28px 60px; background: var(--surface); }
 .manual h2 { margin-top: 28px; }
 .manual table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 8px 0 16px; }
