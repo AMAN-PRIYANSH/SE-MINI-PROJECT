@@ -64,6 +64,18 @@ def dl_service(config):
 
 
 @pytest.fixture
+def qml_service(config):
+    """The real QML microservice (4-qubit VQC on the simulator) on a free port."""
+    from services.common.app_factory import create_service_app
+    from services.qml.server import QMLPredictor
+    from tests.live import LiveService
+    svc = LiveService(create_service_app(QMLPredictor().load(), config.store_dir, "qml"))
+    config.service_urls["qml"] = svc.url
+    yield svc
+    svc.stop()
+
+
+@pytest.fixture
 def uploaded(client, auth):
     """Upload a fixture file and return its dataset_id."""
     import io
