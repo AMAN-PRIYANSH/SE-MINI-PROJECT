@@ -79,14 +79,29 @@ def check_rows(path, max_rows):
     - every required feature value is a finite number
     Row numbers in messages count data rows from 1 (the header is not counted).
     """
+    import pandas as pd
+
+    try:
+        # All columns are read (not usecols) so that a row with extra fields is detected.
+        reader = pd.read_csv(path, dtype=str, keep_default_na=False, index_col=False,
+                             chunksize=CHUNK_ROWS, encoding="utf-8-sig", skip_blank_lines=True)
+    except (pd.errors.ParserError, ValueError, UnicodeDecodeError):
+        raise validation_error("malformed CSV: the rows do not match the header")
+    # The reader is closed before any error leaves this function: on Windows an open
+    # handle would stop the rejected upload from being deleted.
+    with reader:
+        rows = _check_chunks(reader, max_rows)
+    if rows == 0:
+        raise validation_error("the file has no data rows")
+    return rows
+
+
+def _check_chunks(reader, max_rows):
     import numpy as np
     import pandas as pd
 
     rows = 0
     try:
-        # All columns are read (not usecols) so that a row with extra fields is detected.
-        reader = pd.read_csv(path, dtype=str, keep_default_na=False, index_col=False,
-                             chunksize=CHUNK_ROWS, encoding="utf-8-sig", skip_blank_lines=True)
         for chunk in reader:
             first_row = rows + 1
             rows += len(chunk)
@@ -108,7 +123,4 @@ def check_rows(path, max_rows):
                     raise validation_error(f"non-numeric or missing value in column {col} at row {n}")
     except (pd.errors.ParserError, ValueError, UnicodeDecodeError):
         raise validation_error("malformed CSV: the rows do not match the header")
-
-    if rows == 0:
-        raise validation_error("the file has no data rows")
     return rows
