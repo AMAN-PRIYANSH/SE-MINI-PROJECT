@@ -8,3 +8,6 @@ tests/data/generated/
 training/raw/
 *.log
 test-results/
+mlruns/
+mlruns.db
+mlartifacts/
