@@ -23,15 +23,18 @@ sys.path.insert(0, str(ROOT))
 from services.qml.circuit import N_LAYERS, N_QUBITS, forward, predict_proba  # noqa: E402
 from shared.metrics import compute_metrics  # noqa: E402
 from shared.schema import FEATURE_COLUMNS, LABEL_COLUMN  # noqa: E402
+from training.params import load_params  # noqa: E402
 from training.prepare_data import SEED, load, split  # noqa: E402
 
 OUT = ROOT / "services" / "qml" / "model"
-PER_CLASS = 400
-STEPS = 600
-BATCH = 64
 
 
 def main():
+    params = load_params()
+    qp = params["qml"]
+    assert qp["n_qubits"] == N_QUBITS and qp["n_layers"] == N_LAYERS, \
+        "params.yaml qml.n_qubits/n_layers diverged from services/qml/circuit.py"
+    PER_CLASS, STEPS, BATCH = qp["per_class"], qp["steps"], qp["batch"]
     rng = np.random.default_rng(SEED)
     train, test = split(load())
     x_all = train[FEATURE_COLUMNS].to_numpy(float)
@@ -50,10 +53,10 @@ def main():
     x_train = angle.transform(z_all[idx])
     y_train = y_all[idx].astype(float)
 
-    weights = pnp.array(rng.normal(0, 0.3, size=(N_LAYERS, N_QUBITS, 3)), requires_grad=True)
+    weights = pnp.array(rng.normal(0, qp["init_std"], size=(N_LAYERS, N_QUBITS, 3)), requires_grad=True)
     a = pnp.array(2.0, requires_grad=True)
     b = pnp.array(0.0, requires_grad=True)
-    opt = qml.AdamOptimizer(stepsize=0.05)
+    opt = qml.AdamOptimizer(stepsize=qp["stepsize"])
 
     def loss(w, a_, b_, xb, yb):
         p = pnp.clip(forward(xb, w, a_, b_), 1e-6, 1 - 1e-6)

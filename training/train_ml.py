@@ -22,26 +22,35 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from shared.metrics import compute_metrics  # noqa: E402
 from shared.schema import FEATURE_COLUMNS, LABEL_COLUMN  # noqa: E402
+from training.params import load_params  # noqa: E402
 from training.prepare_data import SEED, load, split  # noqa: E402
 
 OUT = ROOT / "services" / "ml" / "model"
 
 
-def build_models():
+def build_models(params):
+    ml = params["ml"]
     return {
-        "logistic_regression": make_pipeline(StandardScaler(), LogisticRegression(max_iter=2000)),
-        "random_forest": RandomForestClassifier(n_estimators=100, max_depth=12, min_samples_leaf=2,
-                                                n_jobs=-1, random_state=SEED),
+        "logistic_regression": make_pipeline(
+            StandardScaler(),
+            LogisticRegression(max_iter=ml["logistic_regression"]["max_iter"])),
+        "random_forest": RandomForestClassifier(
+            n_estimators=ml["random_forest"]["n_estimators"],
+            max_depth=ml["random_forest"]["max_depth"],
+            min_samples_leaf=ml["random_forest"]["min_samples_leaf"],
+            n_jobs=ml["random_forest"]["n_jobs"],
+            random_state=SEED),
     }
 
 
 def main():
+    params = load_params()
     train, test = split(load())
     x_train, y_train = train[FEATURE_COLUMNS].to_numpy(float), train[LABEL_COLUMN].to_numpy(int)
     x_test, y_test = test[FEATURE_COLUMNS].to_numpy(float), test[LABEL_COLUMN].to_numpy(int)
     OUT.mkdir(parents=True, exist_ok=True)
     report = {}
-    for name, model in build_models().items():
+    for name, model in build_models(params).items():
         t0 = time.time()
         model.fit(x_train, y_train)
         proba = model.predict_proba(x_test)[:, 1]
