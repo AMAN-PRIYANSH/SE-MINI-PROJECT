@@ -5,6 +5,7 @@
 Quantum simulation is expensive, so the variational circuit is trained on a balanced
 sample of the training split (all fraud rows up to 400, plus as many legitimate rows),
 with Adam on binary cross-entropy. Evaluation uses the full 20 % test split.
+Hyperparameters come from params.yaml; the run is logged to MLflow.
 """
 import json
 import sys
@@ -23,6 +24,7 @@ sys.path.insert(0, str(ROOT))
 from services.qml.circuit import N_LAYERS, N_QUBITS, forward, predict_proba  # noqa: E402
 from shared.metrics import compute_metrics  # noqa: E402
 from shared.schema import FEATURE_COLUMNS, LABEL_COLUMN  # noqa: E402
+from training.mlflow_utils import end_run, log_artifact, log_metrics, start_run  # noqa: E402
 from training.params import load_params  # noqa: E402
 from training.prepare_data import SEED, load, split  # noqa: E402
 
@@ -34,7 +36,16 @@ def main():
     qp = params["qml"]
     assert qp["n_qubits"] == N_QUBITS and qp["n_layers"] == N_LAYERS, \
         "params.yaml qml.n_qubits/n_layers diverged from services/qml/circuit.py"
-    PER_CLASS, STEPS, BATCH = qp["per_class"], qp["steps"], qp["batch"]
+    start_run("train-qml", {"seed": params["seed"], "qml": qp,
+                            "simulator": "pennylane default.qubit"})
+    try:
+        _train(qp)
+    finally:
+        end_run()
+
+
+def _train(qp):
+    per_class, steps, batch = qp["per_class"], qp["steps"], qp["batch"]
     rng = np.random.default_rng(SEED)
     train, test = split(load())
     x_all = train[FEATURE_COLUMNS].to_numpy(float)
@@ -48,12 +59,13 @@ def main():
 
     fraud = np.where(y_all == 1)[0]
     legit = np.where(y_all == 0)[0]
-    idx = np.concatenate([rng.choice(fraud, min(PER_CLASS, len(fraud)), replace=False),
-                          rng.choice(legit, PER_CLASS, replace=False)])
+    idx = np.concatenate([rng.choice(fraud, min(per_class, len(fraud)), replace=False),
+                          rng.choice(legit, per_class, replace=False)])
     x_train = angle.transform(z_all[idx])
     y_train = y_all[idx].astype(float)
 
-    weights = pnp.array(rng.normal(0, qp["init_std"], size=(N_LAYERS, N_QUBITS, 3)), requires_grad=True)
+    weights = pnp.array(rng.normal(0, qp["init_std"], size=(N_LAYERS, N_QUBITS, 3)),
+                        requires_grad=True)
     a = pnp.array(2.0, requires_grad=True)
     b = pnp.array(0.0, requires_grad=True)
     opt = qml.AdamOptimizer(stepsize=qp["stepsize"])
@@ -63,9 +75,10 @@ def main():
         return -pnp.mean(yb * pnp.log(p) + (1 - yb) * pnp.log(1 - p))
 
     t0 = time.time()
-    for step in range(STEPS):
-        batch = rng.choice(len(x_train), BATCH, replace=False)
-        xb, yb = pnp.array(x_train[batch], requires_grad=False), pnp.array(y_train[batch], requires_grad=False)
+    for step in range(steps):
+        sel = rng.choice(len(x_train), batch, replace=False)
+        xb = pnp.array(x_train[sel], requires_grad=False)
+        yb = pnp.array(y_train[sel], requires_grad=False)
         (weights, a, b, _, _), cost = opt.step_and_cost(loss, weights, a, b, xb, yb)
         if step % 20 == 0:
             print(f"step {step:3d} loss {float(cost):.4f}")
@@ -80,7 +93,7 @@ def main():
     infer_s = time.time() - t1
     report = {"vqc_4qubit": {
         "simulator": "pennylane default.qubit " + qml.__version__,
-        "train_rows": int(len(idx)), "steps": STEPS, "train_seconds": round(train_s, 1),
+        "train_rows": int(len(idx)), "steps": steps, "train_seconds": round(train_s, 1),
         "test_rows": int(len(x_test)), "inference_seconds": round(infer_s, 1),
         "test_metrics": compute_metrics(test[LABEL_COLUMN], (proba >= 0.5).astype(int), proba)}}
     OUT.mkdir(parents=True, exist_ok=True)
@@ -88,6 +101,10 @@ def main():
                  "a": float(a), "b": float(b), "features": FEATURE_COLUMNS, "model_name": "vqc_4qubit"},
                 OUT / "vqc.joblib", compress=3)
     (OUT / "training_report.json").write_text(json.dumps(report, indent=2))
+    log_metrics(report["vqc_4qubit"]["test_metrics"], prefix="vqc_4qubit_")
+    # PennyLane has no MLflow flavor: log the bundle as a generic artifact.
+    log_artifact(OUT / "vqc.joblib")
+    log_artifact(OUT / "training_report.json")
     print(report)
 
 

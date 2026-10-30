@@ -22,6 +22,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from shared.metrics import compute_metrics  # noqa: E402
 from shared.schema import FEATURE_COLUMNS, LABEL_COLUMN  # noqa: E402
+from training.mlflow_utils import end_run, log_artifact  # noqa: E402
+from training.mlflow_utils import log_metrics, log_sklearn_model, start_run  # noqa: E402
 from training.params import load_params  # noqa: E402
 from training.prepare_data import SEED, load, split  # noqa: E402
 
@@ -45,21 +47,28 @@ def build_models(params):
 
 def main():
     params = load_params()
-    train, test = split(load())
-    x_train, y_train = train[FEATURE_COLUMNS].to_numpy(float), train[LABEL_COLUMN].to_numpy(int)
-    x_test, y_test = test[FEATURE_COLUMNS].to_numpy(float), test[LABEL_COLUMN].to_numpy(int)
-    OUT.mkdir(parents=True, exist_ok=True)
-    report = {}
-    for name, model in build_models(params).items():
-        t0 = time.time()
-        model.fit(x_train, y_train)
-        proba = model.predict_proba(x_test)[:, 1]
-        report[name] = {"train_seconds": round(time.time() - t0, 1),
-                        "test_metrics": compute_metrics(y_test, (proba >= 0.5).astype(int), proba)}
-        joblib.dump({"model": model, "features": FEATURE_COLUMNS, "model_name": name},
-                    OUT / f"{name}.joblib", compress=3)
-        print(name, report[name])
-    (OUT / "training_report.json").write_text(json.dumps(report, indent=2))
+    start_run("train-ml", {"seed": params["seed"], "ml": params["ml"]})
+    try:
+        train, test = split(load())
+        x_train, y_train = train[FEATURE_COLUMNS].to_numpy(float), train[LABEL_COLUMN].to_numpy(int)
+        x_test, y_test = test[FEATURE_COLUMNS].to_numpy(float), test[LABEL_COLUMN].to_numpy(int)
+        OUT.mkdir(parents=True, exist_ok=True)
+        report = {}
+        for name, model in build_models(params).items():
+            t0 = time.time()
+            model.fit(x_train, y_train)
+            proba = model.predict_proba(x_test)[:, 1]
+            report[name] = {"train_seconds": round(time.time() - t0, 1),
+                            "test_metrics": compute_metrics(y_test, (proba >= 0.5).astype(int), proba)}
+            joblib.dump({"model": model, "features": FEATURE_COLUMNS, "model_name": name},
+                        OUT / f"{name}.joblib", compress=3)
+            log_metrics(report[name]["test_metrics"], prefix=f"{name}_")
+            log_sklearn_model(model, artifact_path=f"model_{name}")
+            print(name, report[name])
+        (OUT / "training_report.json").write_text(json.dumps(report, indent=2))
+        log_artifact(OUT / "training_report.json")
+    finally:
+        end_run()
 
 
 if __name__ == "__main__":
