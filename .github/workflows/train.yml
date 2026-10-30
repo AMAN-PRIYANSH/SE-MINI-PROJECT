@@ -1,0 +1,61 @@
+# S2-17: train the models and publish the MLflow results.
+#
+# Manual trigger (Actions -> Train models -> Run workflow), or automatically on
+# pushes to main that touch the training pipeline. The job runs `dvc repro`
+# and uploads the MLflow store plus the metric reports as artifacts, so the
+# results of trained models are visible from GitHub Actions without a
+# tracking server: download the `mlflow-store` artifact and open it with
+# `mlflow ui --backend-store-uri sqlite:///mlruns.db`.
+name: Train models
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "training/**"
+      - "dvc.yaml"
+      - "dvc.lock"
+      - "params.yaml"
+      - ".github/workflows/train.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: train-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  train:
+    name: Train (DVC + MLflow)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - name: Install dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Train and evaluate (DVC pipeline)
+        run: python -m dvc repro --force
+      - name: Show metrics
+        run: python -m dvc metrics show
+      - name: Upload MLflow store
+        uses: actions/upload-artifact@v4
+        with:
+          name: mlflow-store
+          path: |
+            mlruns.db
+            mlartifacts/
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: training-reports
+          path: |
+            training/evaluation_report.json
+            services/ml/model/training_report.json
+            services/dl/model/training_report.json
+            services/qml/model/training_report.json

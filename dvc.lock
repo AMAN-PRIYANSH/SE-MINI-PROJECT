@@ -1,0 +1,149 @@
+schema: '2.0'
+stages:
+  prepare:
+    cmd: python training/prepare_data.py
+    params:
+      params.yaml:
+        data:
+          test_size: 0.2
+          mirror: 
+            https://raw.githubusercontent.com/nsethi31/Kaggle-Data-Credit-Card-Fraud-Detection/master/creditcard.csv
+    outs:
+    - path: training/raw/creditcard.csv
+      hash: md5
+      md5: 61b475b2696ec29b4f9acac60c29ecae
+      size: 102634230
+  train_ml:
+    cmd: python training/train_ml.py
+    deps:
+    - path: training/prepare_data.py
+      hash: md5
+      md5: 2f4af434a7dc34de65641c38ebb93bab
+      size: 2260
+    - path: training/raw/creditcard.csv
+      hash: md5
+      md5: 61b475b2696ec29b4f9acac60c29ecae
+      size: 102634230
+    - path: training/train_ml.py
+      hash: md5
+      md5: 40d299b676fa5cc0fff880c135d92dad
+      size: 3103
+    params:
+      params.yaml:
+        ml:
+          logistic_regression:
+            max_iter: 2000
+          random_forest:
+            n_estimators: 100
+            max_depth: 12
+            min_samples_leaf: 2
+            n_jobs: -1
+        seed: 404
+    outs:
+    - path: services/ml/model/training_report.json
+      hash: md5
+      md5: 5a607c414a23585121c5546e45e855ea
+      size: 630
+  train_dl:
+    cmd: python training/train_dl.py
+    deps:
+    - path: training/prepare_data.py
+      hash: md5
+      md5: 2f4af434a7dc34de65641c38ebb93bab
+      size: 2260
+    - path: training/raw/creditcard.csv
+      hash: md5
+      md5: 61b475b2696ec29b4f9acac60c29ecae
+      size: 102634230
+    - path: training/train_dl.py
+      hash: md5
+      md5: 68698b66609a30f5455f6689d1b671f9
+      size: 2751
+    params:
+      params.yaml:
+        dl:
+          hidden_layer_sizes:
+          - 64
+          - 32
+          activation: relu
+          solver: adam
+          alpha: 0.0001
+          batch_size: 512
+          learning_rate_init: 0.001
+          max_iter: 60
+          early_stopping: true
+          validation_fraction: 0.1
+          n_iter_no_change: 6
+        seed: 404
+    outs:
+    - path: services/dl/model/training_report.json
+      hash: md5
+      md5: 501ab28509a239169133bb7ee68d9c3c
+      size: 320
+  train_qml:
+    cmd: python training/train_qml.py
+    deps:
+    - path: services/qml/circuit.py
+      hash: md5
+      md5: 086dc4abe20806d0488ad1da1c6dc9de
+      size: 1438
+    - path: training/prepare_data.py
+      hash: md5
+      md5: 2f4af434a7dc34de65641c38ebb93bab
+      size: 2260
+    - path: training/raw/creditcard.csv
+      hash: md5
+      md5: 61b475b2696ec29b4f9acac60c29ecae
+      size: 102634230
+    - path: training/train_qml.py
+      hash: md5
+      md5: 0909fbd8f54ef1649e861df51bb2b1b1
+      size: 4698
+    params:
+      params.yaml:
+        qml:
+          n_qubits: 4
+          n_layers: 4
+          per_class: 400
+          steps: 600
+          batch: 64
+          stepsize: 0.05
+          init_std: 0.3
+        seed: 404
+    outs:
+    - path: services/qml/model/training_report.json
+      hash: md5
+      md5: 66065ccc3984c5cbee82a6bf244f75ae
+      size: 458
+  evaluate:
+    cmd: python training/evaluate_mlflow.py --dataset 
+      data/samples/sample_transactions.csv
+    deps:
+    - path: data/samples/sample_transactions.csv
+      hash: md5
+      md5: 485a2ee4e73b1cbefb80f23475b7231f
+      size: 566364
+    - path: services/dl/model/mlp.joblib
+      hash: md5
+      md5: 02f3cfd6a2a2492a71213874fc7cc981
+      size: 98611
+    - path: services/ml/model/random_forest.joblib
+      hash: md5
+      md5: 6713e1a9d70d0722d80b287188b74d53
+      size: 335020
+    - path: services/qml/model/vqc.joblib
+      hash: md5
+      md5: a7208c9433f63e1fb9bedfd207150061
+      size: 3525
+    - path: training/evaluate_mlflow.py
+      hash: md5
+      md5: ba5fa6e1ab57b5955fa8ebb5ff5286d4
+      size: 3250
+    params:
+      params.yaml:
+        seed: 404
+    outs:
+    - path: training/evaluation_report.json
+      hash: md5
+      md5: 0691967731a9692812c218667768a502
+      size: 823

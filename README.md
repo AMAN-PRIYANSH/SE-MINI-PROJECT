@@ -165,10 +165,46 @@ legitimate, so compare the models on precision, recall and F1.
 To retrain (this downloads the dataset to `training/raw/`, which is git-ignored):
 
 ```bash
+dvc repro     # whole pipeline: prepare -> train_ml/train_dl/train_qml -> evaluate
+```
+
+or the individual scripts:
+
+```bash
 python training/prepare_data.py && python training/train_ml.py && python training/train_dl.py && python training/train_qml.py
 ```
 
-## 8. Tests
+## 8. Experiment tracking (DVC + MLflow)
+
+Training is a DVC pipeline and every run is tracked in MLflow. Both were added
+without moving any existing file: `dvc.yaml` + `params.yaml` at the repo root,
+`training/params.py` + `training/mlflow_utils.py` + `training/evaluate_mlflow.py`
+as new helpers, and a few lines of logging inside the three training scripts.
+
+**DVC** — the pipeline is `prepare` (download the Kaggle dataset) →
+`train_ml` / `train_dl` / `train_qml` → `evaluate` (score all three models on
+the sample dataset and write `training/evaluation_report.json`).
+Hyperparameters live in `params.yaml` instead of hard-coded in the scripts
+(identical values, so retraining reproduces the committed models).
+
+```bash
+dvc repro              # run the whole pipeline; skips stages whose deps are unchanged
+dvc repro train_qml    # rerun one stage and everything after it
+dvc params diff        # compare hyperparameters between experiments
+dvc metrics show       # test metrics of every trained model
+```
+
+**MLflow** — a local SQLite store (`mlruns.db`, no server needed). Each `train_*.py`
+logs its hyperparameters, test metrics and model artifacts to the
+`ccfd-fraud-detection` experiment; `training/evaluate_mlflow.py` logs the
+model comparison as its own run.
+
+```bash
+python training/evaluate_mlflow.py   # comparison table + training/evaluation_report.json
+mlflow ui --port 5500                # browse runs at http://127.0.0.1:5500
+```
+
+## 9. Tests
 
 ```bash
 python -m pip install -r requirements-dev.txt
@@ -183,7 +219,7 @@ python tests/fixtures/make_datasets.py            # regenerate the synthetic STP
 Test names carry the STP IDs. For example, `test_tc_sec_09_...` implements TC-SEC-09. The latest
 results are in [docs/TEST_REPORT.md](docs/TEST_REPORT.md).
 
-## 9. Development workflow
+## 10. Development workflow
 
 - Backlog: GitHub issues #1 to #34, built from the SRS FRs/NFRs, with story points, sprint milestones
   and planned owners. They are tracked on the GitHub Project *Error 404 - Credit Card Fraud Detection*.
@@ -193,7 +229,7 @@ results are in [docs/TEST_REPORT.md](docs/TEST_REPORT.md).
   tests. **PR automation** labels each PR by the area it changes, assigns the author, and fails any
   PR that does not link an issue.
 
-## 10. Team
+## 11. Team
 
 | SRN | Name |
 |---|---|
