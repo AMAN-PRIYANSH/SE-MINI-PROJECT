@@ -1,0 +1,82 @@
+# DVC pipeline: data preparation, model training and evaluation.
+#
+# Nothing about the repository layout changes: the training scripts, the model
+# files and the reports stay exactly where they are (and stay in git). DVC
+# orchestrates the stages (`dvc repro`), tracks hyperparameters (`dvc params diff`)
+# and surfaces metrics (`dvc metrics show`). Outputs use `cache: false` so DVC
+# records hashes in dvc.lock without moving any file out of the working tree.
+#
+# Usage:
+#   dvc repro            # run the whole pipeline (skips stages whose deps are unchanged)
+#   dvc repro train_qml  # rerun a single stage and everything after it
+#   dvc params diff      # compare hyperparameters between experiments
+#   dvc metrics show     # table of test metrics for every trained model
+
+stages:
+  prepare:
+    cmd: python training/prepare_data.py
+    params:
+      - data
+    outs:
+      - training/raw/creditcard.csv:
+          cache: false
+          persist: true
+          desc: "Public Kaggle credit-card dataset (not in git; downloaded once)"
+
+  train_ml:
+    cmd: python training/train_ml.py
+    deps:
+      - training/train_ml.py
+      - training/prepare_data.py
+      - training/raw/creditcard.csv
+    params:
+      - seed
+      - ml
+    metrics:
+      - services/ml/model/training_report.json:
+          cache: false
+          persist: true
+
+  train_dl:
+    cmd: python training/train_dl.py
+    deps:
+      - training/train_dl.py
+      - training/prepare_data.py
+      - training/raw/creditcard.csv
+    params:
+      - seed
+      - dl
+    metrics:
+      - services/dl/model/training_report.json:
+          cache: false
+          persist: true
+
+  train_qml:
+    cmd: python training/train_qml.py
+    deps:
+      - training/train_qml.py
+      - training/prepare_data.py
+      - training/raw/creditcard.csv
+      - services/qml/circuit.py
+    params:
+      - seed
+      - qml
+    metrics:
+      - services/qml/model/training_report.json:
+          cache: false
+          persist: true
+
+  evaluate:
+    cmd: python training/evaluate_mlflow.py --dataset data/samples/sample_transactions.csv
+    deps:
+      - training/evaluate_mlflow.py
+      - data/samples/sample_transactions.csv
+      - services/ml/model/random_forest.joblib
+      - services/dl/model/mlp.joblib
+      - services/qml/model/vqc.joblib
+    params:
+      - seed
+    metrics:
+      - training/evaluation_report.json:
+          cache: false
+          persist: true

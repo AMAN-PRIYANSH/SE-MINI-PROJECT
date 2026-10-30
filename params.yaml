@@ -1,0 +1,41 @@
+# Hyperparameters for the training pipeline (DVC params).
+# Every value here was previously hard-coded in the training scripts;
+# moving them here lets `dvc params diff` and MLflow track each experiment.
+# Nothing below changes the trained models: the values are identical to the
+# ones the committed models were trained with (seed 404).
+
+seed: 404
+
+data:
+  test_size: 0.2          # 80/20 stratified train/test split (training/prepare_data.py)
+  mirror: "https://raw.githubusercontent.com/nsethi31/Kaggle-Data-Credit-Card-Fraud-Detection/master/creditcard.csv"
+
+ml:
+  logistic_regression:
+    max_iter: 2000
+  random_forest:
+    n_estimators: 100
+    max_depth: 12
+    min_samples_leaf: 2
+    n_jobs: -1
+
+dl:
+  hidden_layer_sizes: [64, 32]
+  activation: "relu"
+  solver: "adam"
+  alpha: 0.0001
+  batch_size: 512
+  learning_rate_init: 0.001
+  max_iter: 60
+  early_stopping: true
+  validation_fraction: 0.1
+  n_iter_no_change: 6
+
+qml:
+  n_qubits: 4             # must match services/qml/circuit.py N_QUBITS
+  n_layers: 4             # must match services/qml/circuit.py N_LAYERS
+  per_class: 400          # balanced training sample: up to 400 fraud + 400 legit rows
+  steps: 600
+  batch: 64
+  stepsize: 0.05
+  init_std: 0.3
