@@ -237,7 +237,6 @@ def main(out_dir):
         retro_name = f"retrospective_{sprint.lower().replace(' ', '')}.md"
         with open(os.path.join(out_dir, retro_name), "w", encoding="utf-8") as f:
             f.write(retrospective(sprint, sel, untracked, goals, today))
-        first = SPRINTS[sprint][0]
         md += [f"## {sprint}", "", f"![{sprint} burndown]({name})", "",
                f"[Retrospective]({retro_name})", "",
                "| Day | Ideal | Remaining |", "|---|---|---|"]
