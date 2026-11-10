@@ -21,10 +21,19 @@ def test_tc_api_03_completed_shape(client, auth, uploaded, ml_service):
     dataset_id = uploaded()
     job_id = start(client, auth, dataset_id)
     body = poll(client, auth, job_id)
-    assert list(body) == ["job_id", "dataset_id", "model_type", "status", "model_name", "predictions", "metrics"]
+    assert list(body) == ["job_id", "dataset_id", "model_type", "status", "model_name", "predictions",
+                          "metrics", "best_model"]
     assert body["job_id"] == job_id and body["dataset_id"] == dataset_id and body["model_type"] == "ml"
     assert body["status"] == "completed" and body["model_name"] == "random_forest"
+    assert body["best_model"]["best"]["model"] == "random_forest"
     assert len(body["predictions"]) == 1000
+
+
+def test_best_model_endpoint_returns_the_six_model_ranking(client, auth):
+    body = client.get("/api/best-model", headers=auth).get_json()
+    assert body["metric"] == "f1" and body["best"]["model"] == "random_forest"
+    assert [m["model"] for m in body["models"]] == ["random_forest", "mlp", "dnn",
+                                                    "logistic_regression", "vqc_4qubit", "qsvm"]
 
 
 def test_tc_api_03_queued_or_running_shape_has_no_results(app, client, auth, uploaded):
