@@ -72,11 +72,28 @@ stages:
       - training/evaluate_mlflow.py
       - data/samples/sample_transactions.csv
       - services/ml/model/random_forest.joblib
+      - services/ml/model/logistic_regression.joblib
       - services/dl/model/mlp.joblib
+      - services/dl/model/dnn.joblib
       - services/qml/model/vqc.joblib
+      - services/qml/model/qsvm.joblib
     params:
       - seed
     metrics:
       - training/evaluation_report.json:
+          cache: false
+          persist: true
+
+  select_best:
+    cmd: python training/select_best_model.py
+    deps:
+      - training/select_best_model.py
+      - services/ml/model/training_report.json
+      - services/dl/model/training_report.json
+      - services/qml/model/training_report.json
+    params:
+      - selection
+    metrics:
+      - training/best_model.json:
           cache: false
           persist: true
