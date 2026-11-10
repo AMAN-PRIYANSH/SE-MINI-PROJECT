@@ -1,0 +1,19 @@
+# Build context for the Docker images: only what the services need to run.
+.git
+.github
+__pycache__
+*.pyc
+.venv
+venv
+data_store
+mlruns
+mlruns.db
+mlartifacts
+tests
+docs
+dvc.yaml
+dvc.lock
+# Training inputs/outputs are not needed at runtime - except best_model.json,
+# which the Web Server surfaces as the headline result.
+training/*
+!training/best_model.json

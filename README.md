@@ -105,6 +105,9 @@ Every setting comes from the environment, so no secret is ever written in source
 | `CCFD_ML_URL`, `CCFD_DL_URL`, `CCFD_QML_URL` | `http://127.0.0.1:5001`, `:5002`, `:5003` | Service addresses used by the Web Server |
 | `CCFD_ML_PORT`, `CCFD_DL_PORT`, `CCFD_QML_PORT` | `5001`, `5002`, `5003` | Port each service listens on |
 | `CCFD_ML_MODEL` | `random_forest` | Classifier the ML service runs: `random_forest` or `logistic_regression` |
+| `CCFD_DL_MODEL` | `mlp` | Model the DL service runs: `mlp` or `dnn` |
+| `CCFD_QML_MODEL` | `vqc_4qubit` | Model the QML service runs: `vqc_4qubit` or `qsvm` |
+| `CCFD_BIND_HOST` | `127.0.0.1` | Address the model services bind to. Use `0.0.0.0` inside a container |
 
 ## 5. REST API (SADS 3.2)
 
@@ -146,7 +149,7 @@ to the configuration. The Web Client does not change (SRS section 6, reuse objec
 
 ## 7. Models
 
-All four models are trained on the same stratified 80 % split of the public, anonymised Kaggle dataset
+All six models are trained on the same stratified 80 % split of the public, anonymised Kaggle dataset
 *Credit Card Fraud Detection* (284,807 transactions, 492 fraud; seed 404). The table below shows their
 results on the remaining 20 % (56,962 rows, 98 fraud):
 
@@ -155,12 +158,19 @@ results on the remaining 20 % (56,962 rows, 98 fraud):
 | ML (default) | `random_forest` | 0.9995 | 0.9359 | 0.7449 | 0.8295 | 0.9690 |
 | ML (option) | `logistic_regression` | 0.9991 | 0.8615 | 0.5714 | 0.6871 | 0.9737 |
 | DL | `mlp` | 0.9994 | 0.9125 | 0.7449 | 0.8202 | 0.9625 |
+| DL (option) | `dnn` | 0.9993 | 0.8021 | 0.7857 | 0.7938 | 0.9612 |
 | QML | `vqc_4qubit` | 0.9957 | 0.2310 | 0.6531 | 0.3413 | 0.8536 |
+| QML (option) | `qsvm` | 0.9925 | 0.1407 | 0.6633 | 0.2321 | 0.8482 |
 
-The QML model compresses the 29 features to 4 PCA components, one per qubit, and is trained on a
-balanced sample of 794 rows (394 fraud, 400 legitimate). That is why it is weaker: it is a working quantum baseline, not a
-competitive one. Accuracy is close to 1 for every model only because 99.83 % of transactions are
-legitimate, so compare the models on precision, recall and F1.
+The DNN is a PyTorch 128+64 ReLU net trained with a positive-class weight of 10 and a
+decision threshold tuned on the validation split for max F1 (0.67); at the usual 0.5 cut
+it over-fires, which is why the threshold is stored in the model bundle. The quantum
+models compress the 29 features to 4 PCA components, one per qubit, and train on a
+balanced sample of 794 rows (394 fraud, 400 legitimate). That is why they are weaker:
+they are working quantum baselines, not competitive ones. Accuracy is close to 1 for
+every model only because 99.83 % of transactions are legitimate, so compare the models
+on precision, recall and F1. `training/select_best_model.py` ranks all six by F1 and
+the Web Server shows the winner (Random Forest) as the headline result.
 
 To retrain (this downloads the dataset to `training/raw/`, which is git-ignored):
 
@@ -182,8 +192,9 @@ without moving any existing file: `dvc.yaml` + `params.yaml` at the repo root,
 as new helpers, and a few lines of logging inside the three training scripts.
 
 **DVC** — the pipeline is `prepare` (download the Kaggle dataset) →
-`train_ml` / `train_dl` / `train_qml` → `evaluate` (score all three models on
-the sample dataset and write `training/evaluation_report.json`).
+`train_ml` / `train_dl` / `train_qml` → `evaluate` (score all six models on
+the sample dataset and write `training/evaluation_report.json`) → `select_best`
+(rank the six models and write `training/best_model.json`).
 Hyperparameters live in `params.yaml` instead of hard-coded in the scripts
 (identical values, so retraining reproduces the committed models).
 
@@ -196,15 +207,43 @@ dvc metrics show       # test metrics of every trained model
 
 **MLflow** — a local SQLite store (`mlruns.db`, no server needed). Each `train_*.py`
 logs its hyperparameters, test metrics and model artifacts to the
-`ccfd-fraud-detection` experiment; `training/evaluate_mlflow.py` logs the
-model comparison as its own run.
+`ccfd-fraud-detection` experiment; `training/evaluate_mlflow.py` and
+`training/select_best_model.py` log the model comparison and the selection as
+their own runs.
 
 ```bash
 python training/evaluate_mlflow.py   # comparison table + training/evaluation_report.json
 mlflow ui --port 5500                # browse runs at http://127.0.0.1:5500
 ```
 
-## 9. Tests
+**Six models, best result as output** — each category trains two algorithms on
+the same 80/20 split (seed 404): ML — Logistic Regression + Random Forest;
+DL — sklearn MLP + PyTorch DNN; QML — 4-qubit VQC + quantum-kernel SVM.
+`training/select_best_model.py` ranks all six by test-split F1 (tiebreak
+ROC-AUC) and writes `training/best_model.json`; the Web Server shows the
+winner as the headline result on every completed analysis
+(`GET /api/best-model`). Current ranking: Random Forest 0.8295, MLP 0.8202,
+DNN 0.7938, Logistic Regression 0.6871, VQC 0.3413, QSVM 0.2321. The served
+model per service is switchable: `CCFD_ML_MODEL`, `CCFD_DL_MODEL`,
+`CCFD_QML_MODEL` (defaults: random_forest, mlp, vqc_4qubit).
+
+## 9. Docker
+
+One image per service (Web Server + ML/DL/QML microservices), built from the
+Dockerfiles next to each component and run together with compose:
+
+```bash
+docker compose up --build    # Web Server on http://127.0.0.1:5000
+```
+
+Only the Web Server's port is published to the host; the model services are
+reachable inside the compose network only, and all four share the dataset
+store. Set `CCFD_API_KEY` before starting (or accept the dev default in
+`docker-compose.yml`); pick the served model per service with
+`CCFD_ML_MODEL` / `CCFD_DL_MODEL` / `CCFD_QML_MODEL`. Docker is not required
+for local development — `python run_all.py` still runs everything on one host.
+
+## 10. Tests
 
 ```bash
 python -m pip install -r requirements-dev.txt
@@ -219,7 +258,7 @@ python tests/fixtures/make_datasets.py            # regenerate the synthetic STP
 Test names carry the STP IDs. For example, `test_tc_sec_09_...` implements TC-SEC-09. The latest
 results are in [docs/TEST_REPORT.md](docs/TEST_REPORT.md).
 
-## 10. Development workflow
+## 11. Development workflow
 
 - Backlog: GitHub issues #1 to #34, built from the SRS FRs/NFRs, with story points, sprint milestones
   and planned owners. They are tracked on the GitHub Project *Error 404 - Credit Card Fraud Detection*.
@@ -229,7 +268,7 @@ results are in [docs/TEST_REPORT.md](docs/TEST_REPORT.md).
   tests. **PR automation** labels each PR by the area it changes, assigns the author, and fails any
   PR that does not link an issue.
 
-## 11. Team
+## 12. Team
 
 | SRN | Name |
 |---|---|

@@ -83,7 +83,12 @@ def create_service_app(predictor, store_dir, name):
 
 
 def run_service(predictor, name, default_port, port_env):
-    """Load the model, then serve on the loopback interface only."""
+    """Load the model, then serve on the loopback interface only.
+
+    CCFD_BIND_HOST overrides the bind address (0.0.0.0 inside a container, where
+    the Web Server reaches the service over the container network instead of
+    the loopback interface); the default keeps the single-host posture.
+    """
     import os
 
     from shared.config import store_dir_from_env
@@ -92,4 +97,4 @@ def run_service(predictor, name, default_port, port_env):
     predictor.load()
     app = create_service_app(predictor, store_dir_from_env(), name)
     port = int(os.environ.get(port_env, default_port))
-    app.run(host="127.0.0.1", port=port, threaded=True)
+    app.run(host=os.environ.get("CCFD_BIND_HOST", "127.0.0.1"), port=port, threaded=True)

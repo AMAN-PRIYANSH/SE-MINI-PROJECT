@@ -1,0 +1,66 @@
+# Phase 3: the whole system as four containers, one image per service.
+#
+#   docker compose up --build
+#
+# The Web Server listens on http://127.0.0.1:5000. Only its port is published to
+# the host; the model services are reachable from inside the compose network
+# only (CCFD_*_URL), and all four share the dataset store (named volume).
+# Set CCFD_API_KEY before starting (or accept the dev default below), and
+# pick the served model per service with CCFD_ML_MODEL / CCFD_DL_MODEL /
+# CCFD_QML_MODEL (defaults: random_forest, mlp, vqc_4qubit).
+services:
+  web:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    ports:
+      - "127.0.0.1:5000:5000"
+    environment:
+      CCFD_API_KEY: ${CCFD_API_KEY:-dev-key-change-me}
+      CCFD_HOST: "0.0.0.0"
+      CCFD_ML_URL: http://ml:5001
+      CCFD_DL_URL: http://dl:5002
+      CCFD_QML_URL: http://qml:5003
+      CCFD_STORE_DIR: /app/data_store
+    volumes:
+      - data-store:/app/data_store
+    depends_on:
+      - ml
+      - dl
+      - qml
+
+  ml:
+    build:
+      context: .
+      dockerfile: services/ml/Dockerfile
+    environment:
+      CCFD_BIND_HOST: "0.0.0.0"
+      CCFD_ML_MODEL: ${CCFD_ML_MODEL:-random_forest}
+      CCFD_STORE_DIR: /app/data_store
+    volumes:
+      - data-store:/app/data_store
+
+  dl:
+    build:
+      context: .
+      dockerfile: services/dl/Dockerfile
+    environment:
+      CCFD_BIND_HOST: "0.0.0.0"
+      CCFD_DL_MODEL: ${CCFD_DL_MODEL:-mlp}
+      CCFD_STORE_DIR: /app/data_store
+    volumes:
+      - data-store:/app/data_store
+
+  qml:
+    build:
+      context: .
+      dockerfile: services/qml/Dockerfile
+    environment:
+      CCFD_BIND_HOST: "0.0.0.0"
+      CCFD_QML_MODEL: ${CCFD_QML_MODEL:-vqc_4qubit}
+      CCFD_STORE_DIR: /app/data_store
+    volumes:
+      - data-store:/app/data_store
+
+volumes:
+  data-store:

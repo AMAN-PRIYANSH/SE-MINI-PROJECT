@@ -1,0 +1,4 @@
+# CPU-only torch (the DL service and its training script need it; the extra index
+# serves CPU wheels so no CUDA toolkit is downloaded on any machine).
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.15.0+cpu

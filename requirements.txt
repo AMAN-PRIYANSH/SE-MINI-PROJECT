@@ -1,16 +1,7 @@
-# Runtime dependencies - exact versions (SRS D1). Requires Python 3.12+.
-flask==3.1.3
-requests==2.34.2
-numpy==2.5.3
-pandas==3.0.5
-scipy==1.18.1
-scikit-learn==1.9.1
-joblib==1.6.0
+# Runtime + training dependencies - exact versions (SRS D1). Requires Python 3.12+.
+-r requirements-runtime.txt
 pennylane==0.45.1
-# CPU-only torch (the DL service and its training script need it; the extra index
-# serves CPU wheels so no CUDA toolkit is downloaded on any machine).
---extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.15.0+cpu
+-r requirements-torch.txt
 # Experiment tracking (training scripts only; the product does not need them at runtime)
 dvc==3.67.1
 mlflow==3.17.2
