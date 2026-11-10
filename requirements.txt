@@ -7,6 +7,10 @@ scipy==1.18.1
 scikit-learn==1.9.1
 joblib==1.6.0
 pennylane==0.45.1
+# CPU-only torch (the DL service and its training script need it; the extra index
+# serves CPU wheels so no CUDA toolkit is downloaded on any machine).
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.15.0+cpu
 # Experiment tracking (training scripts only; the product does not need them at runtime)
 dvc==3.67.1
 mlflow==3.17.2
