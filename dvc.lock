@@ -42,8 +42,8 @@ stages:
     outs:
     - path: services/ml/model/training_report.json
       hash: md5
-      md5: 5a607c414a23585121c5546e45e855ea
-      size: 630
+      md5: 25a42e34527f26d777a909c62bc2148f
+      size: 631
   train_dl:
     cmd: python training/train_dl.py
     deps:
@@ -57,8 +57,8 @@ stages:
       size: 102634230
     - path: training/train_dl.py
       hash: md5
-      md5: 68698b66609a30f5455f6689d1b671f9
-      size: 2751
+      md5: b533876b495ae24797bebd2b9d3c875a
+      size: 7464
     params:
       params.yaml:
         dl:
@@ -74,12 +74,23 @@ stages:
           early_stopping: true
           validation_fraction: 0.1
           n_iter_no_change: 6
+          dnn:
+            hidden_sizes:
+            - 128
+            - 64
+            dropout: 0.1
+            learning_rate: 0.001
+            batch_size: 512
+            epochs: 30
+            patience: 5
+            weight_decay: 0.0
+            pos_weight: 10.0
         seed: 404
     outs:
     - path: services/dl/model/training_report.json
       hash: md5
-      md5: 501ab28509a239169133bb7ee68d9c3c
-      size: 320
+      md5: 9e6bb6192dc02f5a958dd8022963c865
+      size: 694
   train_qml:
     cmd: python training/train_qml.py
     deps:
@@ -97,8 +108,8 @@ stages:
       size: 102634230
     - path: training/train_qml.py
       hash: md5
-      md5: 0909fbd8f54ef1649e861df51bb2b1b1
-      size: 4698
+      md5: 28bafd90d011ce89eefd231c2b5839ef
+      size: 7541
     params:
       params.yaml:
         qml:
@@ -109,12 +120,14 @@ stages:
           batch: 64
           stepsize: 0.05
           init_std: 0.3
+          qsvm:
+            C: 1.0
         seed: 404
     outs:
     - path: services/qml/model/training_report.json
       hash: md5
-      md5: 66065ccc3984c5cbee82a6bf244f75ae
-      size: 458
+      md5: 26a4d6f98209a3696e798226c1ae7c21
+      size: 890
   evaluate:
     cmd: python training/evaluate_mlflow.py --dataset 
       data/samples/sample_transactions.csv
@@ -123,27 +136,67 @@ stages:
       hash: md5
       md5: 485a2ee4e73b1cbefb80f23475b7231f
       size: 566364
+    - path: services/dl/model/dnn.joblib
+      hash: md5
+      md5: da437484db4c591afa6161bef230c585
+      size: 46850
     - path: services/dl/model/mlp.joblib
       hash: md5
-      md5: 02f3cfd6a2a2492a71213874fc7cc981
-      size: 98611
+      md5: 04b6ed95bab8d18042bbd9b7e68e2a92
+      size: 98615
+    - path: services/ml/model/logistic_regression.joblib
+      hash: md5
+      md5: 8823b1f63a25596fa133e355faad4dc7
+      size: 1892
     - path: services/ml/model/random_forest.joblib
       hash: md5
       md5: 6713e1a9d70d0722d80b287188b74d53
       size: 335020
+    - path: services/qml/model/qsvm.joblib
+      hash: md5
+      md5: 007fdf86a8f782ed55467f79ffce0b3b
+      size: 197961
     - path: services/qml/model/vqc.joblib
       hash: md5
-      md5: a7208c9433f63e1fb9bedfd207150061
-      size: 3525
+      md5: 1b808789ff48fc0bb26ec6483b0bfedb
+      size: 3523
     - path: training/evaluate_mlflow.py
       hash: md5
-      md5: ba5fa6e1ab57b5955fa8ebb5ff5286d4
-      size: 3250
+      md5: 5b7a6097db933ad2563413b5c91a0eb5
+      size: 3098
     params:
       params.yaml:
         seed: 404
     outs:
     - path: training/evaluation_report.json
       hash: md5
-      md5: 0691967731a9692812c218667768a502
-      size: 823
+      md5: 01afc3d9363b98f5030325ae041f5c28
+      size: 1650
+  select_best:
+    cmd: python training/select_best_model.py
+    deps:
+    - path: services/dl/model/training_report.json
+      hash: md5
+      md5: 9e6bb6192dc02f5a958dd8022963c865
+      size: 694
+    - path: services/ml/model/training_report.json
+      hash: md5
+      md5: 25a42e34527f26d777a909c62bc2148f
+      size: 631
+    - path: services/qml/model/training_report.json
+      hash: md5
+      md5: 26a4d6f98209a3696e798226c1ae7c21
+      size: 890
+    - path: training/select_best_model.py
+      hash: md5
+      md5: 873adc25be0c69d6390d0f90fc29c015
+      size: 3173
+    params:
+      params.yaml:
+        selection:
+          metric: f1
+    outs:
+    - path: training/best_model.json
+      hash: md5
+      md5: bf1362235b25ab8efcef0327f3f4ea4a
+      size: 1331

@@ -17,7 +17,7 @@
     }
   },
   "dnn": {
-    "train_seconds": 54.4,
+    "train_seconds": 55.0,
     "epochs": 12,
     "best_val_loss": 0.0082,
     "threshold": 0.67,

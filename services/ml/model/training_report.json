@@ -1,6 +1,6 @@
 {
   "logistic_regression": {
-    "train_seconds": 0.5,
+    "train_seconds": 2.7,
     "test_metrics": {
       "accuracy": 0.9991,
       "precision": 0.8615,
@@ -16,7 +16,7 @@
     }
   },
   "random_forest": {
-    "train_seconds": 50.7,
+    "train_seconds": 148.3,
     "test_metrics": {
       "accuracy": 0.9995,
       "precision": 0.9359,
