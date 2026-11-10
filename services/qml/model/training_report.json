@@ -3,9 +3,9 @@
     "simulator": "pennylane default.qubit 0.45.1",
     "train_rows": 794,
     "steps": 600,
-    "train_seconds": 15.7,
+    "train_seconds": 32.0,
     "test_rows": 56962,
-    "inference_seconds": 0.5,
+    "inference_seconds": 1.0,
     "test_metrics": {
       "accuracy": 0.9957,
       "precision": 0.231,
@@ -17,6 +17,26 @@
         "tn": 56651,
         "fp": 213,
         "fn": 34
+      }
+    }
+  },
+  "qsvm": {
+    "simulator": "pennylane default.qubit 0.45.1",
+    "train_rows": 794,
+    "train_seconds": 0.0,
+    "test_rows": 56962,
+    "inference_seconds": 5.3,
+    "test_metrics": {
+      "accuracy": 0.9925,
+      "precision": 0.1407,
+      "recall": 0.6633,
+      "f1": 0.2321,
+      "roc_auc": 0.8482,
+      "confusion_matrix": {
+        "tp": 65,
+        "tn": 56467,
+        "fp": 397,
+        "fn": 33
       }
     }
   }

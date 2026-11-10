@@ -62,3 +62,27 @@ def test_tc_met_04_same_dataset_three_models_comparable(client, auth, uploaded, 
     assert set(sets) == {"random_forest", "mlp", "vqc_4qubit"}
     shapes = {name: (tuple(m), tuple(m["confusion_matrix"])) for name, m in sets.items()}
     assert len(set(shapes.values())) == 1
+
+
+def test_qsvm_contract_in_isolation(tmp_path):
+    """Second QML algorithm (quantum-kernel SVM): same /predict contract as the VQC."""
+    (tmp_path / "datasets").mkdir()
+    dataset_id = new_id()
+    shutil.copy(DATA / "valid_1000.csv", tmp_path / "datasets" / f"{dataset_id}.csv")
+    c = create_service_app(QMLPredictor("qsvm").load(), tmp_path, "qml").test_client()
+    assert c.get("/health").get_json() == {"status": "ok"}
+    t0 = time.perf_counter()
+    body = c.post("/predict", json={"dataset_id": dataset_id}).get_json()
+    assert time.perf_counter() - t0 < 60  # far inside the 600 s job limit
+    assert body["model_name"] == "qsvm" and len(body["predictions"]) == 1000
+    labels = pd.read_csv(DATA / "valid_1000.csv")["Class"]
+    assert body["metrics"] == compute_metrics(labels, [p["class"] for p in body["predictions"]],
+                                              [p["probability"] for p in body["predictions"]])
+    assert_error_shape(c.post("/predict", json={"dataset_id": new_id()}), 404, "E404_NOT_FOUND")
+
+
+def test_qsvm_probabilities_are_deterministic_and_in_range():
+    p = QMLPredictor("qsvm").load()
+    x = pd.read_csv(DATA / "valid_51.csv")[p.bundle["features"]].to_numpy(float)
+    a, b = p.predict_proba(x), p.predict_proba(x)
+    assert np.allclose(a, b) and (a >= 0).all() and (a <= 1).all()
