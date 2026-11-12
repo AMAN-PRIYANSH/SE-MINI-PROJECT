@@ -1,6 +1,6 @@
 {
   "mlp": {
-    "train_seconds": 3.0,
+    "train_seconds": 14.0,
     "epochs": 8,
     "test_metrics": {
       "accuracy": 0.9994,
@@ -13,6 +13,25 @@
         "tn": 56857,
         "fp": 7,
         "fn": 25
+      }
+    }
+  },
+  "dnn": {
+    "train_seconds": 55.0,
+    "epochs": 12,
+    "best_val_loss": 0.0082,
+    "threshold": 0.67,
+    "test_metrics": {
+      "accuracy": 0.9993,
+      "precision": 0.8021,
+      "recall": 0.7857,
+      "f1": 0.7938,
+      "roc_auc": 0.9612,
+      "confusion_matrix": {
+        "tp": 77,
+        "tn": 56845,
+        "fp": 19,
+        "fn": 21
       }
     }
   }

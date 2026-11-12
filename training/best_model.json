@@ -1,0 +1,68 @@
+{
+  "metric": "f1",
+  "best": {
+    "category": "ml",
+    "model": "random_forest",
+    "accuracy": 0.9995,
+    "precision": 0.9359,
+    "recall": 0.7449,
+    "f1": 0.8295,
+    "roc_auc": 0.969
+  },
+  "models": [
+    {
+      "category": "ml",
+      "model": "random_forest",
+      "accuracy": 0.9995,
+      "precision": 0.9359,
+      "recall": 0.7449,
+      "f1": 0.8295,
+      "roc_auc": 0.969
+    },
+    {
+      "category": "dl",
+      "model": "mlp",
+      "accuracy": 0.9994,
+      "precision": 0.9125,
+      "recall": 0.7449,
+      "f1": 0.8202,
+      "roc_auc": 0.9625
+    },
+    {
+      "category": "dl",
+      "model": "dnn",
+      "accuracy": 0.9993,
+      "precision": 0.8021,
+      "recall": 0.7857,
+      "f1": 0.7938,
+      "roc_auc": 0.9612
+    },
+    {
+      "category": "ml",
+      "model": "logistic_regression",
+      "accuracy": 0.9991,
+      "precision": 0.8615,
+      "recall": 0.5714,
+      "f1": 0.6871,
+      "roc_auc": 0.9737
+    },
+    {
+      "category": "qml",
+      "model": "vqc_4qubit",
+      "accuracy": 0.9957,
+      "precision": 0.231,
+      "recall": 0.6531,
+      "f1": 0.3413,
+      "roc_auc": 0.8536
+    },
+    {
+      "category": "qml",
+      "model": "qsvm",
+      "accuracy": 0.9925,
+      "precision": 0.1407,
+      "recall": 0.6633,
+      "f1": 0.2321,
+      "roc_auc": 0.8482
+    }
+  ]
+}

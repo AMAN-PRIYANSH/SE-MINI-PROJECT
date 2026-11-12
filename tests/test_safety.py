@@ -15,6 +15,7 @@ def test_tc_safe_02_no_transaction_initiating_endpoint(app):
     assert api_routes == [
         ("/api/analyses", ("POST",)),
         ("/api/analyses/<job_id>", ("GET",)),
+        ("/api/best-model", ("GET",)),
         ("/api/datasets", ("POST",)),
     ]
     words = ("authori", "transfer", "payment", "block", "charge", "refund")

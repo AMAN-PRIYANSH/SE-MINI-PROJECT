@@ -14,6 +14,21 @@
       }
     }
   },
+  "logistic_regression": {
+    "test_metrics": {
+      "accuracy": 0.9925,
+      "precision": 1.0,
+      "recall": 0.625,
+      "f1": 0.7692,
+      "roc_auc": 0.9852,
+      "confusion_matrix": {
+        "tp": 25,
+        "tn": 1960,
+        "fp": 0,
+        "fn": 15
+      }
+    }
+  },
   "mlp": {
     "test_metrics": {
       "accuracy": 0.992,
@@ -29,6 +44,21 @@
       }
     }
   },
+  "dnn": {
+    "test_metrics": {
+      "accuracy": 0.9955,
+      "precision": 0.9697,
+      "recall": 0.8,
+      "f1": 0.8767,
+      "roc_auc": 0.9054,
+      "confusion_matrix": {
+        "tp": 32,
+        "tn": 1959,
+        "fp": 1,
+        "fn": 8
+      }
+    }
+  },
   "vqc_4qubit": {
     "test_metrics": {
       "accuracy": 0.9905,
@@ -41,6 +71,21 @@
         "tn": 1946,
         "fp": 14,
         "fn": 5
+      }
+    }
+  },
+  "qsvm": {
+    "test_metrics": {
+      "accuracy": 0.963,
+      "precision": 0.3396,
+      "recall": 0.9,
+      "f1": 0.4932,
+      "roc_auc": 0.9441,
+      "confusion_matrix": {
+        "tp": 36,
+        "tn": 1890,
+        "fp": 70,
+        "fn": 4
       }
     }
   }

@@ -6,6 +6,7 @@ import shutil
 from flask import Blueprint, current_app, jsonify, request
 
 from server.auth import require_api_key
+from server.best_model import load_best_model
 from server.errors import ApiError, validation_error
 from server.jobs import MODEL_TYPES
 from server.validator import check_file_level, check_rows
@@ -103,9 +104,21 @@ def job_status(job_id):
             raise ApiError(500, "E500_INTERNAL")
         body.update(model_name=result["model_name"], predictions=result["predictions"],
                     metrics=result["metrics"])
+        best = load_best_model()
+        if best is not None:
+            body["best_model"] = best
     elif job["status"] == "failed":
         body["reason"] = job["reason"]
     return jsonify(body)
+
+
+@api.get("/best-model")
+def best_model():
+    """GET /api/best-model - the best of the six trained models (Phase 3)."""
+    best = load_best_model()
+    if best is None:
+        raise ApiError(404, "E404_NOT_FOUND")
+    return jsonify(best)
 
 
 def register(app):

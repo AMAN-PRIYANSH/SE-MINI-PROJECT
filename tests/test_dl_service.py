@@ -1,12 +1,14 @@
 """DL microservice and routing (S2-01; TC-MOD-03, TC-MOD-06 for port 5002, TC-JOB-04)."""
 import shutil
 
+import numpy as np
 import pandas as pd
 
 from server.store import new_id
 from services.common.app_factory import create_service_app
 from services.dl.server import DLPredictor
 from shared.metrics import compute_metrics
+from shared.schema import FEATURE_COLUMNS
 from tests.conftest import DATA
 from tests.helpers import assert_error_shape
 from tests.live import wait_for
@@ -47,3 +49,34 @@ def test_tc_job_04_ml_and_dl_jobs_back_to_back(client, auth, uploaded, ml_servic
     assert (ra["dataset_id"], ra["model_type"], ra["model_name"], len(ra["predictions"])) == \
         (a_ds, "ml", "random_forest", 1000)
     assert (rb["dataset_id"], rb["model_type"], rb["model_name"], len(rb["predictions"])) == (b_ds, "dl", "mlp", 51)
+
+
+def test_dnn_contract_in_isolation(tmp_path):
+    """Second DL algorithm (PyTorch DNN): same /predict contract as the MLP."""
+    (tmp_path / "datasets").mkdir()
+    dataset_id = new_id()
+    shutil.copy(DATA / "valid_1000.csv", tmp_path / "datasets" / f"{dataset_id}.csv")
+    c = create_service_app(DLPredictor("dnn").load(), tmp_path, "dl").test_client()
+    assert c.get("/health").get_json() == {"status": "ok"}
+    body = c.post("/predict", json={"dataset_id": dataset_id}).get_json()
+    assert body["model_name"] == "dnn" and len(body["predictions"]) == 1000
+    labels = pd.read_csv(DATA / "valid_1000.csv")["Class"]
+    assert body["metrics"] == compute_metrics(labels, [p["class"] for p in body["predictions"]],
+                                              [p["probability"] for p in body["predictions"]])
+    assert_error_shape(c.post("/predict", json={"dataset_id": new_id()}), 404, "E404_NOT_FOUND")
+
+
+def test_dnn_probabilities_are_deterministic_and_in_range():
+    p = DLPredictor("dnn").load()
+    x = pd.read_csv(DATA / "valid_51.csv")[FEATURE_COLUMNS].to_numpy(float)
+    a, b = p.predict_proba(x), p.predict_proba(x)
+    assert np.allclose(a, b) and (a >= 0).all() and (a <= 1).all()
+
+
+def test_dnn_uses_its_tuned_threshold():
+    """The DNN's classes come from its validation-tuned threshold, not 0.5."""
+    p = DLPredictor("dnn").load()
+    x = pd.read_csv(DATA / "valid_51.csv")[FEATURE_COLUMNS].to_numpy(float)
+    classes, proba = p.predict(x)
+    assert 0 < p.threshold < 1
+    assert (classes == (proba >= p.threshold).astype(int)).all()

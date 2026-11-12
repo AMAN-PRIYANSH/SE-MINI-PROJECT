@@ -111,6 +111,16 @@
     document.getElementById("predictions-block").replaceWith(predictionsTable());
   }
 
+  function bestModelBanner(job) {
+    const b = job.best_model;
+    if (!b) return null;
+    return el("p", { class: "best-model", "data-testid": "best-model" }, [
+      document.createTextNode(
+        `Best model overall: ${b.best.model} (${b.best.category}) — ` +
+        `F1 ${fmt(b.best.f1)}, ROC-AUC ${fmt(b.best.roc_auc)} on the test split.`),
+    ]);
+  }
+
   function showCompleted(job) {
     const t0 = performance.now();
     current = { job, page: 1 };
@@ -123,7 +133,10 @@
       ]),
       el("div", { id: "result-actions" }),
     ]);
-    body.append(head, metricTiles(job),
+    const banner = bestModelBanner(job);
+    body.append(head);
+    if (banner) body.append(banner);
+    body.append(metricTiles(job),
                 el("div", { class: "result-cols" }, [confusionMatrix(job), predictionsTable()]));
     if (window.CCFDResultsHooks) window.CCFDResultsHooks.forEach((fn) => fn(job, body));
     window.__ccfdRenderMs.push(performance.now() - t0);
